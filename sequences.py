@@ -2,7 +2,7 @@ from random import randrange
 
 enemies = ["Baby Krog", 4, 2, 0]
 
-def combat(name,HP,defense,location,weapon):
+def combat(name,currentHP,defense,location,weapon):
   
   damage = 0 
   enemyDamage = 0
@@ -16,8 +16,8 @@ def combat(name,HP,defense,location,weapon):
   
   print("\nFIGHT!\n")
   
-  while HP > 0 and enemyHP > 0:
-    print(name,":",HP," ( -",enemyDamage,")")
+  while currentHP > 0 and enemyHP > 0:
+    print(name,":",currentHP," ( -",enemyDamage,")")
     print(enemyName, enemyHP, " ( -",damage,")")
 
     print("\n1: Attack\n2: Defend\n")
@@ -27,7 +27,7 @@ def combat(name,HP,defense,location,weapon):
       enemyDamage = randrange(enemyWeapon) - defense
       
       enemyHP = enemyHP - damage
-      HP = HP - enemyDamage
+      currentHP = currentHP - enemyDamage
       
       print("------------------")
   
@@ -39,4 +39,4 @@ def combat(name,HP,defense,location,weapon):
     print (name, "defeated the", enemyName)
     print("Gained ",goldGained,"gold.")
     print("Gained",xpGained,"XP")
-    return result, goldGained, xpGained
+    return result, currentHP, goldGained, xpGained

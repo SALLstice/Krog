@@ -10,10 +10,10 @@ gold = 0
 xp = 0 
 
 while 1:
-  activity = int(input("1:Fight\n2:Inventory\n3:Store"))
+  activity = int(input("1:Fight\n2:Inventory\n3:Store\n"))
   
   if activity == 1:
-    result, goldGain, xpGain = combat(name, currentHP, defense, location, weapon)
+    result, currentHP, goldGain, xpGain = combat(name, currentHP, defense, location, weapon)
     if result == 1:
       gold = gold + goldGain
       xp = xp + xpGain

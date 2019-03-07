@@ -4,7 +4,7 @@ from WorldBuilder import *
 name = input("Enter your name:")
 WorldSize = int(input("Number of Cities? "))
 
-worldWeb = BuildWorld(WorldSize)
+worldWeb, capital = BuildWorld(WorldSize)
 
 location = 0
 currentHP = 10
@@ -24,6 +24,6 @@ while 1:
   elif activity == 3:
     inv = store(inv)
   elif activity == 4:
-    locInfo(worldWeb, location)
+    locInfo(worldWeb, location, capital)
     
 

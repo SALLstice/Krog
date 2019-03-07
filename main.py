@@ -1,39 +1,29 @@
-from sequences import combat
+from sequences import *
+from WorldBuilder import *
 
 name = input("Enter your name:")
+WorldSize = int(input("Number of Cities? "))
 
-location = 1
+worldWeb = BuildWorld(WorldSize)
+
+location = 0
 currentHP = 10
-weapon = 2
-defense = 0
-gold = 0 
-xp = 0 
+inv = [2, 0, 0, 0]
 
 while 1:
-  activity = int(input("1:Fight\n2:Inventory\n3:Store\n"))
+  activity = int(input("1:Fight\n2:Inventory\n3:Store\n4:Location\n"))
   
   if activity == 1:
-    result, currentHP, goldGain, xpGain = combat(name, currentHP, defense, location, weapon)
+    result, currentHP, goldGain, xpGain = combat(name, currentHP, location, inv)
     if result == 1:
-      gold = gold + goldGain
-      xp = xp + xpGain
+      inv[2] =+ goldGain
+      inv[3] =+ xpGain
       result = 0 
   elif activity == 2:
-    print("Weapon: ", weapon)
-    print("Armor: ", defense)
-    print("Gold: ", gold)
-    print("XP: ", xp)
+    inventory(inv)
   elif activity == 3:
-    option = int(input("1: Better Sword [20]\n2: Better Armor [30]"))
-    if option == 1 and gold >= 20:
-      gold = gold - 20
-      weapon = 3 
-    elif option == 1 and gold < 20:
-      print ("can't afford")
-    elif option == 2 and gold >= 30:
-      gold -= 30
-      defense = 1
-    elif option == 2 and gold < 30:
-      print ("can't afford")
+    inv = store(inv)
+  elif activity == 4:
+    locInfo(worldWeb, location)
     
 

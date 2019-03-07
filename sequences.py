@@ -2,9 +2,10 @@ from random import randrange
 
 enemies = ["Baby Krog", 4, 2, 0]
 
-def locInfo(web, loc):
+def locInfo(web, loc, cap):
   print("\nYou are in " + str(loc) + ".")
   print("There are " + str(len(web.edges(loc))) + " roads out of " + str(loc) + ": " + str(web.edges(loc)))
+  print("The capital city is " + str(cap))
 
 def store(inv):
     option = int(input("1: Better Sword [20]\n2: Better Armor [30]"))

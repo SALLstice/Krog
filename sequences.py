@@ -1,14 +1,31 @@
 from random import randrange
+from items import *
+from places import *
 
 enemies = ["Baby Krog", 4, 2, 0]
 
-def locInfo(web, loc, cap):
-  print("\nYou are in " + str(loc) + ".")
-  print("There are " + str(len(web.edges(loc))) + " roads out of " + str(loc) + ": " + str(web.edges(loc)))
+def travel(web, loc):
+    print("\nYou are in " + str(loc) + ".")
+    print("There are " + str(len(web.edges(loc))) + " roads out of " + str(loc) + ": ")
+    print("0 : Don't travel")
+    for j in range(len(list(web.neighbors(loc)))):
+        print(j+1, ": " + web[loc][list(web.neighbors(loc))[j]]['description'])
+    trav = int(input("Which road will you travel?\n"))
+    if trav == 0: return -5
+    return(list(web.neighbors(loc))[trav-1])
+
+def worldInfo(web, cap):
   print("The capital city is " + str(cap))
 
-def store(inv):
-    option = int(input("1: Better Sword [20]\n2: Better Armor [30]"))
+def locInfo(web, loc):
+  roads = []
+  print("\nYou are in " + str(loc) + ".")
+  for i in range(len(web.node[1]['buildings'])):
+    print(str(i) + ": " + checkBuilding(web.node[1]['buildings'][i]))
+  return input()
+
+def store(web, loc, inv):
+    option = int(input("1: Club [20]\n2: Padded Shirt [30]"))
     if option == 1 and inv[2] >= 20:
       inv[2] -= 20 
     elif option == 1 and inv[2] < 20:
@@ -21,10 +38,12 @@ def store(inv):
     return(inv)
 
 def inventory(inv):
-    print("Weapon: ", inv[0])
-    print("Armor: ", inv[1])
-    print("Gold: ", inv[2])
-    print("XP: ", inv[3])
+  print("\nItems you have equipped:")
+  for i in range(len(inv[0])):
+    print(checkItem(inv[0][i]))
+  print("\nItems in your bag:")
+  for j in range(1, len(inv[1])):
+    print(checkItem(inv[1][j]))
     
 def combat(name,currentHP,location,inv):
 

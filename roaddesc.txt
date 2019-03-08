@@ -1,0 +1,17 @@
+winding
+overgrown
+rocky
+jagged
+rough
+dirt
+wide
+thin
+hilly
+flat
+bumpy
+dusty
+wild
+foreboding
+pleasant
+calm
+open

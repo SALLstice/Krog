@@ -17,15 +17,11 @@ def travel(web, loc):
 def worldInfo(web, cap):
   print("The capital city is " + str(cap))
 
-def locInfo(web, loc):
-  roads = []
-  print("\nYou are in " + str(loc) + ".")
-  for i in range(len(web.node[1]['buildings'])):
-    print(str(i) + ": " + checkBuilding(web.node[1]['buildings'][i]))
-  return input()
+
 
 def store(web, loc, inv):
-    option = int(input("1: Club [20]\n2: Padded Shirt [30]"))
+    
+    option = int(input())
     if option == 1 and inv[2] >= 20:
       inv[2] -= 20 
     elif option == 1 and inv[2] < 20:
@@ -37,13 +33,6 @@ def store(web, loc, inv):
       print ("can't afford")
     return(inv)
 
-def inventory(inv):
-  print("\nItems you have equipped:")
-  for i in range(len(inv[0])):
-    print(checkItem(inv[0][i]))
-  print("\nItems in your bag:")
-  for j in range(1, len(inv[1])):
-    print(checkItem(inv[1][j]))
     
 def combat(name,currentHP,location,inv):
 

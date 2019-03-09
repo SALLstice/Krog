@@ -4,36 +4,7 @@ from places import *
 
 enemies = ["Baby Krog", 4, 2, 0]
 
-def travel(web, loc):
-    print("\nYou are in " + str(loc) + ".")
-    print("There are " + str(len(web.edges(loc))) + " roads out of " + str(loc) + ": ")
-    print("0 : Don't travel")
-    for j in range(len(list(web.neighbors(loc)))):
-        print(j+1, ": " + web[loc][list(web.neighbors(loc))[j]]['description'])
-    trav = int(input("Which road will you travel?\n"))
-    if trav == 0: return -5
-    return(list(web.neighbors(loc))[trav-1])
 
-def worldInfo(web, cap):
-  print("The capital city is " + str(cap))
-
-
-
-def store(web, loc, inv):
-    
-    option = int(input())
-    if option == 1 and inv[2] >= 20:
-      inv[2] -= 20 
-    elif option == 1 and inv[2] < 20:
-      print ("can't afford")
-    elif option == 2 and inv[2] >= 30:
-      inv[2] -= 30
-      inv[3] = 1
-    elif option == 2 and inv[2] < 30:
-      print ("can't afford")
-    return(inv)
-
-    
 def combat(name,currentHP,location,inv):
 
   weapon = inv[0]

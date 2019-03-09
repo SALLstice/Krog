@@ -35,6 +35,8 @@ def locInfo(web, loc):
     shop(int(input()))
 
 def shop(entityID):
-    print("You are at " + str(siteEntityList[entityID].name))
+    print(entityID)
+    print("\nYou are at " + str(siteEntityList[entityID].name))
     print("Stock:")
-    print(itemEntityList[siteEntityList[entityID].stock].itemType)
+    for i in range(len(siteEntityList[entityID].stock)):
+        print(itemEntityList[siteEntityList[entityID].stock[i]].itemType, itemEntityList[siteEntityList[entityID].stock[i]].item.combatValue)

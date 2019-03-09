@@ -30,8 +30,8 @@ def buildWorld(numCities):
 
 #give each node sites
     for x in range(len(web.nodes)):
-        web.nodes[x]['sites'] = [createSite(random.randrange(100),'food',x,1,createItem(0,"Curative Herbs",random.randrange(100))),
-                                 createSite(random.randrange(100),'armor',x,1,createItem(0,"Padded Clothing",random.randrange(100))),
-                                 createSite(random.randrange(100),'weapons',x,1,createItem(0,"Short Sword",random.randrange(100)))]
+        web.nodes[x]['sites'] = [createSite(random.randrange(100),'food',x,1,createItem("Curative Herbs")),
+                                 createSite(random.randrange(100),'armor',x,1,[createItem("Padded Clothing"),createItem("Padded Clothing")]),
+                                 createSite(random.randrange(100),'weapons',x,1,createItem("Short Sword"))]
 
     return(web, capidx)

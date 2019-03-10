@@ -1,4 +1,0 @@
-0,0,0
-1,Farmer's Market,5
-2,Simple Weapon Shop,2 6
-3,Simple Clothiers,3 4 7

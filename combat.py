@@ -1,29 +1,26 @@
 from random import randrange
-from items import *
-from places import *
+import item as it
+import people as pe
 
-enemies = ["Baby Krog", 4, 2, 0]
+def combat():
 
+  enemies = ["Baby Krog", 1, 1, 0, it.createItem(6)]
 
-def combat(name,currentHP,location,inv):
+  weapon = it.items[pe.me.inv[0][0]].combatValue
+  defense = it.items[pe.me.inv[0][2]].combatValue + it.items[pe.me.inv[0][1]].combatValue
 
-  weapon = inv[0]
-  defense = inv[1]
-  
-  damage = 0 
+  damage = 0
   enemyDamage = 0
-  
-  if location == 0:
-    enemyType = 1
-    enemyName = "Baby Krog"
-    enemyHP = randrange(4)+1
-    enemyWeapon = 2
-    enDef = 0
+
+  enemyName = enemies[0]
+  enemyHP = enemies[1]+1
+  enemyWeapon = enemies[2]
+  enDef = enemies[3]
   
   print("\nFIGHT!\n")
   
-  while currentHP > 0 and enemyHP > 0:
-    print(name,":",currentHP," ( -",enemyDamage,")")
+  while pe.me.currentHP > 0 and enemyHP > 0:
+    print(pe.me.name,":",pe.me.currentHP," ( -",enemyDamage,")")
     print(enemyName, enemyHP, " ( -",damage,")")
 
     print("\n1: Attack\n2: Defend\n")
@@ -33,16 +30,18 @@ def combat(name,currentHP,location,inv):
       enemyDamage = randrange(enemyWeapon) - defense
       
       enemyHP = enemyHP - damage
-      currentHP = currentHP - enemyDamage
+      pe.me.currentHP = pe.me.currentHP - enemyDamage
       
       print("------------------")
   
   if enemyHP <= 0:
-    goldGained = randrange(5)
+    itemsGained = enemies[4]
     xpGained = randrange(10)
     result = 1
     
-    print (name, "defeated the", enemyName)
-    print("Gained ",goldGained,"gold.")
+    print (pe.me.name, "defeated the", enemyName)
+    print("Gained",it.items[itemsGained].itemType)
     print("Gained",xpGained,"XP")
-    return result, currentHP, goldGained, xpGained
+
+    pe.me.inv[1].append(itemsGained)
+    return result

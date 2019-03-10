@@ -1,42 +1,72 @@
-import csv
-from items import *
+import item as it
+import people as pe
 
-siteList = []
-siteEntityList = []
+siteTypeList = []
+sites = []
 
 class site:
-    def __init__(self,name,siteType):
-        self.name = name
-        self.siteType = siteType
-
-class siteEntity:
-    def __init__(self,entityID,name,siteType,loc,civil,stock):
+    def __init__(self,entityID,name,siteType,civil,inv):
         self.entityID = entityID
         self.name = name
         self.siteType = siteType
-        self.loc = loc
         self.civil = civil
-        self.stock = stock
+        self.inv = inv
 
-###create siteList from file
-##with open(r'C:\Users\Matt\Documents\GitHub\Krog\sites.txt', 'r') as f:
-##    reader = csv.reader(f)
-##    for row in reader:
-##        siteList.append(site(row[0], row[1]))
+#create itemList from file
+with open('siteList.txt') as f:
+    for line in f:
+        row = eval(line)
+        siteTypeList.append(site(int(len(siteTypeList)),row[0],row[1],row[2],[]))
 
-def createSite(name,siteType,loc,civil,stock):
-    siteEntityList.append(siteEntity(int(len(siteEntityList)),name,siteType,loc,civil,stock))
-    return siteEntityList[int(len(siteEntityList)-1)].entityID
+
+def createSite(name,siteType,loc,civil,inv):
+    sites.append(site(int(len(sites)),name,siteType,civil,inv))
+    return sites[int(len(sites)-1)].entityID
 
 def locInfo(web, loc):
+    print("Shop\nRumors\nInfo") #todo
     print("\nYou are in " + str(loc) + ".")
+    #prints out every site in location
     for x in range(len(web.nodes[loc]['sites'])):
-        print(siteEntityList[web.nodes[loc]['sites'][x]].name, siteEntityList[web.nodes[loc]['sites'][x]].siteType,siteEntityList[web.nodes[loc]['sites'][x]].entityID)
-    shop(int(input()))
+        print(x, sites[web.nodes[loc]['sites'][x]].name, sites[web.nodes[loc]['sites'][x]].siteType)
+    whereGo = int(input())
+    shop(sites[web.nodes[loc]['sites'][whereGo]])
 
-def shop(entityID):
-    print(entityID)
-    print("\nYou are at " + str(siteEntityList[entityID].name))
-    print("Stock:")
-    for i in range(len(siteEntityList[entityID].stock)):
-        print(itemEntityList[siteEntityList[entityID].stock[i]].itemType, itemEntityList[siteEntityList[entityID].stock[i]].item.combatValue)
+def shop(store):
+    print("\nYou are at " + str(store.name))
+    buySell = int(input("1: Buy\n2: Sell\n"))
+
+    #Buy an item
+    if buySell == 1:
+        print("Stock:")
+        for i in range(len(store.inv)):
+            if it.items[store.inv[i]].itemType != 'null':
+                print(i, it.items[store.inv[i]].itemType, it.items[store.inv[i]].combatValue, it.items[store.inv[i]].cost)
+        whatBuy = int(input())
+        if whatBuy == 0:
+            return
+        if pe.me.inv[2] >= it.items[store.inv[whatBuy]].cost:
+            it.buyItem(store.inv[whatBuy], store)
+
+    #Sell an Item
+    elif buySell == 2:
+        print("\nItems in your bag:")
+        for i in range(len(pe.me.inv[1])):
+            if it.items[pe.me.inv[1][i]].itemType != 'null':
+                print(i, it.items[pe.me.inv[1][i]].itemType)
+        sell = int(input())
+        it.sellItem(pe.me.inv[1][sell], store)
+
+
+def travel(web, loc):
+    print("\nYou are in " + str(loc) + ".")
+    print("There are " + str(len(web.edges(loc))) + " roads out of " + str(loc) + ": ")
+    print("0 : Don't travel")
+    for j in range(len(list(web.neighbors(loc)))):
+        print(j+1, ": " + web[loc][list(web.neighbors(loc))[j]]['description'])
+    trav = int(input("Which road will you travel?\n"))
+    if trav == 0: return -5
+    return(list(web.neighbors(loc))[trav-1])
+
+def worldInfo(cap):
+  print("The capital city is " + str(cap))

@@ -1,22 +1,46 @@
-import networkx as nx
-import matplotlib.pyplot as plt
-import random
-from WorldBuilder import *
-from items import *
-from places import *
-import csv
+# import networkx as nx
+# import matplotlib.pyplot as plt
+# import random
+# from WorldBuilder import *
+# from items import *
+# from places import *
+# import csv
+# import ast
 
-web, cap = buildWorld(12)
-loc = 1
-equip = [1,3]
-bag = [5,5]
-inv = [equip, bag, 0]
+#web, cap = buildWorld(12)
+# loc = 1
+# equip = [1,3]
+# bag = [5,5]
+# inv = [equip, bag, 0]
+flist = []
 ##------------------------------------
 
-for i in range(len(web.node[1]['buildings'])):
-    print(checkBuilding(web.node[1]['buildings'][i]))
+money = 15015
 
-##--------------------------------------    
+print("gold " + str(int((money / 10000))))
+print("silver " + str(int(money / 100)%100))
+print("copper " + str(money % 100))
+
+
+
+
+
+
+
+
+
+
+##------------------------------------
+
+
+
+#
+# with open('testfile.txt') as f:
+#     for line in f:
+#         flist.append(eval(line))
+#     print(flist)
+
+##--------------------------------------
 ##    option = int(input(web(loc)
 ##    if option == 1 and inv[2] >= 20:
 ##      inv[2] -= 20 

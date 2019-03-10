@@ -1,8 +1,8 @@
 import networkx as nx
 import matplotlib.pyplot as plt
 import random
-from items import *
-from places import *
+import item as it
+import places as pl
 
 def buildWorld(numCities):
     capidx = 0
@@ -19,7 +19,7 @@ def buildWorld(numCities):
 #    plt.show()
 
 #construct and describe roads
-    with open(r"C:\Users\Matt\Documents\GitHub\Krog\roaddesc.txt") as f:
+    with open('roaddesc.txt') as f:
         lines = f.read().splitlines()
     
     for (u,v,w) in web.edges(data=True):
@@ -30,8 +30,8 @@ def buildWorld(numCities):
 
 #give each node sites
     for x in range(len(web.nodes)):
-        web.nodes[x]['sites'] = [createSite(random.randrange(100),'food',x,1,createItem("Curative Herbs")),
-                                 createSite(random.randrange(100),'armor',x,1,[createItem("Padded Clothing"),createItem("Padded Clothing")]),
-                                 createSite(random.randrange(100),'weapons',x,1,createItem("Short Sword"))]
+        web.nodes[x]['sites'] = [pl.createSite(random.randrange(100),'food',x,1,[it.createItem(0), it.createItem(5),it.createItem(5)]),
+                                 pl.createSite(random.randrange(100),'armor',x,1,[it.createItem(0), it.createItem(2),it.createItem(4)]),
+                                 pl.createSite(random.randrange(100),'weapons',x,1,[it.createItem(0), it.createItem(3),it.createItem(1)])]
 
-    return(web, capidx)
+    return web, capidx

@@ -18,13 +18,13 @@ with open('siteList.txt') as f:
         row = eval(line)
         siteTypeList.append(site(int(len(siteTypeList)),row[0],row[1],row[2],[]))
 
-
+#todo make some sites hidden
 def createSite(name,siteType,loc,civil,inv):
     sites.append(site(int(len(sites)),name,siteType,civil,inv))
     return sites[int(len(sites)-1)].entityID
 
-def locInfo(web, loc):
-    print("Shop\nRumors\nInfo") #todo
+def locInfo(web, loc): #todo split lodInfo into branch options
+    print("Shop\nRumors\nInfo") #todo make rumors
     print("\nYou are in " + str(loc) + ".")
     #prints out every site in location
     for x in range(len(web.nodes[loc]['sites'])):
@@ -58,7 +58,7 @@ def shop(store):
         it.sellItem(pe.me.inv[1][sell], store)
 
 
-def travel(web, loc):
+def travel(web, loc): #todo ability to ask and learn where roads lead. Going to a location learns that road
     print("\nYou are in " + str(loc) + ".")
     print("There are " + str(len(web.edges(loc))) + " roads out of " + str(loc) + ": ")
     print("0 : Don't travel")

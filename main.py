@@ -1,26 +1,39 @@
+import item as it
 import WorldBuilder as wb
 import combat as c
-import item as it
 import people as pe
 import places as pl
 
 name = input("Enter your name:")
 WorldSize = int(input("Number of Cities? "))
+it.items.append(it.item(int(len(it.items)),
+                          it.itemTypeList[0].itemType,
+                          it.itemTypeList[0].equip,
+                          it.itemTypeList[0].combatValue,
+                          it.itemTypeList[0].cost,
+                          it.itemTypeList[0].effect,
+                          it.itemTypeList[0].effectValue,
+                          '',
+                          ''))
 
-worldWeb, capital = wb.buildWorld(WorldSize)
+if WorldSize >= 2:
+  worldWeb, capital = wb.buildWorld(WorldSize)
+else:
+  exit()
 
 location = 0
 
-pe.createPlayer(name,location,10,[2, 2],[[it.createItem(2),it.createItem(1)], [it.createItem(4)], 0])
+pe.createPlayer(name,10,[2,2],[[3,0,0,0,0], [2,5], 0])
 
 currentHP = 10
 overlandSpeed = 3
-
-while 1:
+#todo monsters grow as time passes
+#todo adult monsters can birth babies
+while 1: #todo add in game clock and calendar
   a = int(input("\n1:Fight\n2:Inventory\n3:Location\n4:World\n"))
   
-  if a == 1: #fight
-    result = c.combat()
+  if a == 1: #fight #todo make fight explore with options of finding hidden locations
+    result = c.combat(worldWeb.nodes[location]['monsters'])
     if result == 1:
       result = 0 
   elif a == 2: #inventory

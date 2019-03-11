@@ -27,8 +27,19 @@ with open('itemList.txt') as f:
 
 #generates items List
 def createItem(iTID, name='0', desc='0'):
-    items.append(item(int(len(items)), itemTypeList[iTID].itemType,itemTypeList[iTID].equip,itemTypeList[iTID].combatValue,itemTypeList[iTID].cost,itemTypeList[iTID].effect,itemTypeList[iTID].effectValue, name, desc))
-    return items[int(len(items) - 1)].entityID
+    if iTID != 0:
+        items.append(item(int(len(items)),
+                          itemTypeList[iTID].itemType,
+                          itemTypeList[iTID].equip,
+                          itemTypeList[iTID].combatValue,
+                          itemTypeList[iTID].cost,
+                          itemTypeList[iTID].effect,
+                          itemTypeList[iTID].effectValue,
+                          name,
+                          desc))
+        return items[int(len(items) - 1)].entityID
+    if iTID == 0:
+        return itemTypeList[0].entityID
 
 def createItemAt(itemTypeID, loc, name='0', desc='0'):
     return()
@@ -43,8 +54,8 @@ def inventory():
     print("Accessory 2: " + items[pe.me.inv[0][4]].itemType)
 
     print("\nItems in your bag:")
-    for i in range(len(pe.me.inv[1])):
-        if items[pe.me.inv[1][i]].itemType != 'null':
+    if len(pe.me.inv[1]) >= 1:
+        for i in range(len(pe.me.inv[1])):
             print(items[pe.me.inv[1][i]].itemType)
 
     print("\nCoin Pouch:")
@@ -58,21 +69,18 @@ def inventory():
             if items[pe.me.inv[1][i]].itemType != 'null':
                 print(i, items[pe.me.inv[1][i]].itemType)
         invidx = int(input())
-        equipRegion = items[pe.me.inv[1][invidx]].equip       #find which region the new item equips to
-        pe.me.inv[1].append(pe.me.inv[0][equipRegion])           #add unequiped item to invnentory
-        pe.me.inv[0][equipRegion] = pe.me.inv[1][invidx]          #set new item to equip slot
-        pe.me.inv[1].remove(pe.me.inv[1][invidx])                 #remove equipped item from inventory
+        equipItem(pe.me.inv[1][invidx])
+
 
     elif whatDo == 2:
         print("Unequip what?")
         for i in range(len(pe.me.inv[0])):
-            if items[pe.me.inv[0][i]].itemType != 'null':
+            if items[pe.me.inv[0][i]].itemType != 'nothing':
                 print(i, items[pe.me.inv[0][i]].itemType)
         invidx = int(input())
         equipRegion = items[pe.me.inv[0][invidx]].equip  # find which region the new item equips to
-
         pe.me.inv[1].append(pe.me.inv[0][equipRegion])        #add unequiped item to invnentory
-
+        pe.me.inv[0][equipRegion] = 0
 
 
 def sellItem(iE, soldTo):
@@ -84,3 +92,10 @@ def buyItem(iE, boughtFrom):
     pe.me.inv[2] -= items[iE].cost #subtract money for item cost
     boughtFrom.inv.remove(items[iE].entityID) #remove item from store inventory
     pe.me.inv[1].append(items[iE].entityID) #add item to player inventory
+
+def equipItem(iEID):
+    equipRegion = items[iEID].equip  # find which region the new item equips to
+    if pe.me.inv[0][equipRegion] != 0:              #tests to make sure it's not "nothing"
+        pe.me.inv[1].append(pe.me.inv[0][equipRegion])  # add unequiped item to invnentory
+    pe.me.inv[0][equipRegion] = iEID  # set new item to equip slot
+    pe.me.inv[1].remove(iEID)  # remove equipped item from inventory

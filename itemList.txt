@@ -1,4 +1,4 @@
-"null",0,0,0,0,0
+"nothing",0,0,0,0,0
 "Short Sword",0,3,300,0,0
 "Clothing",2,0,3,0,0
 "Training Sword",0,2,200,0,0

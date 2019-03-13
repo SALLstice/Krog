@@ -2,6 +2,7 @@ import csv
 import ast
 import people as pe
 import places as pl
+import random as r
 
 itemTypeList = []
 items = []
@@ -53,7 +54,7 @@ def inventory():
     print("Accessory 1: " + items[pe.me.inv[0][3]].itemType)
     print("Accessory 2: " + items[pe.me.inv[0][4]].itemType)
 
-    print("\nItems in your bag:")
+    print("\nItems in your bag:")       #todo inventory limit
     if len(pe.me.inv[1]) >= 1:
         for i in range(len(pe.me.inv[1])):
             print(items[pe.me.inv[1][i]].itemType)
@@ -62,20 +63,20 @@ def inventory():
     money = pe.me.inv[2]
     print("You have " + str(int((money / 10000))) + " gold, " +str(int(money / 100)%100) + " silver, " + str(money % 100) + " copper.")
 
-    whatDo = int(input("\n1: Equip\n2: Unequip\n"))
+    whatDo = int(input("\n1: Equip/Use\n2: Unequip\n"))
     if whatDo == 1:
-        print("Equip what?")
+        print("Equip/Use what?")
         for i in range(len(pe.me.inv[1])):
-            if items[pe.me.inv[1][i]].itemType != 'null':
-                print(i, items[pe.me.inv[1][i]].itemType)
+            print(i, items[pe.me.inv[1][i]].itemType)
         invidx = int(input())
-        equipItem(pe.me.inv[1][invidx])
-
-
+        if items[pe.me.inv[1][invidx]].equip >= 0:
+            equipItem(pe.me.inv[1][invidx])
+        elif items[pe.me.inv[1][invidx]].equip == -1:
+            useItem(pe.me.inv[1][invidx])
     elif whatDo == 2:
         print("Unequip what?")
         for i in range(len(pe.me.inv[0])):
-            if items[pe.me.inv[0][i]].itemType != 'nothing':
+            if items[pe.me.inv[0][i]].itemType != '':
                 print(i, items[pe.me.inv[0][i]].itemType)
         invidx = int(input())
         equipRegion = items[pe.me.inv[0][invidx]].equip  # find which region the new item equips to
@@ -86,7 +87,7 @@ def inventory():
 def sellItem(iE, soldTo):
     pe.me.inv[2] += int(items[iE].cost/2)             #add money for item cost
     soldTo.inv.append(items[iE].entityID)    #
-    pe.me.inv[1].remove(items[iE].entityID)      #
+    pe.me.inv[1].remove(items[iE].entityID)      # #todo print what was sold for how much
 
 def buyItem(iE, boughtFrom):
     pe.me.inv[2] -= items[iE].cost #subtract money for item cost
@@ -99,3 +100,20 @@ def equipItem(iEID):
         pe.me.inv[1].append(pe.me.inv[0][equipRegion])  # add unequiped item to invnentory
     pe.me.inv[0][equipRegion] = iEID  # set new item to equip slot
     pe.me.inv[1].remove(iEID)  # remove equipped item from inventory
+
+def useItem(iEID):
+    ef = items[iEID].effect
+
+    if ef == 1: #todo check if at full first
+        efv = items[iEID].effectValue   #todo add random range to effeect value
+        print("The", items[iEID].itemType, "heals you for", efv, ".")
+        if pe.me.currentHP + efv >= pe.me.maxHP:
+            pe.me.currentHP = pe.me.maxHP
+        elif pe.me.currentHP + efv < pe.me.maxHP:
+            pe.me.currentHP += efv
+    elif ef == 2: #todo ask if wanting to eat poison first. still give option if they want. Lose 1 (max?) hp every hour. check against tough to throw it off. Sleep to regain
+        ...
+    else:
+        ...
+
+    return

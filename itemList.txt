@@ -1,7 +1,7 @@
-"nothing",0,0,0,0,0
-"Short Sword",0,3,300,0,0
-"Clothing",2,0,3,0,0
-"Training Sword",0,2,200,0,0
-"Padded Clothing",2,1,100,0,0
-"Curative Herbs",0,0,4,1,3
-"Krog Guts",0,0,2,2,1
+"",0,0,0,0,0
+"Short Sword",      0,      3,      300,    0,      0
+"Clothing",         2,      0,      3,      0,      0
+"Training Sword",   0,      2,      200,    0,      0
+"Padded Clothing",  2,      1,      100,    0,      0
+"Curative Herbs",   -1,      0,      4,      1,      3
+"Krog Guts",        -1,      0,      2,      2,      1

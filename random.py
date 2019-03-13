@@ -650,20 +650,20 @@ class SystemRandom(Random):
 ## -------------------- test program --------------------
 
 def _test_generator(n, func, args):
-    import time
+    import times
     print(n, 'times', func.__name__)
     total = 0.0
     sqsum = 0.0
     smallest = 1e10
     largest = -1e10
-    t0 = time.time()
+    t0 = times.time()
     for i in range(n):
         x = func(*args)
         total += x
         sqsum = sqsum + x*x
         smallest = min(x, smallest)
         largest = max(x, largest)
-    t1 = time.time()
+    t1 = times.time()
     print(round(t1-t0, 3), 'sec,', end=' ')
     avg = total/n
     stddev = _sqrt(sqsum/n - avg*avg)

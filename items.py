@@ -117,3 +117,7 @@ def useItem(iEID):
         ...
 
     return
+
+def sortInventory():
+    #todo
+    ...

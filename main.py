@@ -70,7 +70,7 @@ while 1:  # todo add in game clock and calendar
         if status == 2:
             it.inventory()
     elif a == 3:  # current location
-        pl.locInfo()
+        pl.visitRegionSite()
     elif a == 4:  # world
         x = int(input("1: World Info\n2: Travel"))
         if x == 1:

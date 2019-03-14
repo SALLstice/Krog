@@ -1,0 +1,5 @@
+"",                     0,          0,      0,      0
+"Farmer's Market",      'food',     'town', 1,      [9,9]
+"Simple Weapon Shop",   'weapon',   'town', 1,      [1,10]
+"Simple Armorers",      'armor',    'town', 1,      [4,11,12]
+"Druid Circle",         'druid',    'wild', 0,      []

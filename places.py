@@ -1,9 +1,10 @@
+import math as m
+
 import items as it
 import people as pe
-import worlds as w
-import times as t
 import random as r
-import math as m
+import times as t
+import worlds as w
 
 siteTypeList = []
 sites = []
@@ -80,6 +81,7 @@ def siteActivity(store):
             if whatBuy == -1:
                 return
             if pe.me.inv[2] >= it.items[store.inv[whatBuy]].cost:
+                print("\n'Thanks to you, adventurer.\nMay your tomorrow be brighter than your today.'")
                 it.buyItem(store.inv[whatBuy], store)
 
         #Display items to sell

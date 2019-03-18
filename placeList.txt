@@ -1,0 +1,7 @@
+"",                     0,          0,      0,      0,          0
+"Farmer's Market",      'food',     'town', 1,      [9,9],      5
+"Simple Weapon Shop",   'weapon',   'town', 1,      [1,10],     5
+"Simple Armorers",      'armor',    'town', 1,      [4,11,12],  5
+"Druid Circle",         'druid',    'wild', 0,      [],         3
+"Inn",                  'inn',      'town', 1,      [9,13],     8
+"Giant Hill",           'king krog','wild', 0,      0,          0

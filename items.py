@@ -1,8 +1,4 @@
-import csv
-import ast
 import people as pe
-import places as pl
-import random as r
 
 itemTypeList = []
 items = []
@@ -86,8 +82,9 @@ def inventory():
 
 def sellItem(iE, soldTo):
     pe.me.inv[2] += int(items[iE].cost/2)             #add money for item cost
-    soldTo.inv.append(items[iE].entityID)    #
-    pe.me.inv[1].remove(items[iE].entityID)      # #todo print what was sold for how much
+    soldTo.inv.append(items[iE].entityID)  # add item to store inventory
+    pe.me.inv[1].remove(items[iE].entityID)  # remove item from player inventory
+    # #todo print what was sold for how much
 
 def buyItem(iE, boughtFrom):
     pe.me.inv[2] -= items[iE].cost #subtract money for item cost

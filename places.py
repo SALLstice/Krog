@@ -1,66 +1,74 @@
 import math as m
 
+import networkx as nx
+
 import items as it
 import people as pe
 import random as r
 import times as t
 import worlds as w
 
-siteTypeList = []
-sites = []
+placeTypeList = []
+places = []
 
-class site:
-    def __init__(self,entityID,name,siteType,area,known,inv):
+
+class place:
+    def __init__(self, entityID, name, placeType, area, known, inv, health):
         self.entityID = entityID
         self.name = name
-        self.siteType = siteType
+        self.placeType = placeType
         self.area = area
         self.known = known
         self.inv = inv
+        self.health = health
 
-#create itemList from file              #todo I think this was important
-with open('siteList.txt') as f:
-    for line in f:
+
+with open('placeList.txt') as f:
+    for line in f:  # create itemList from file
         row = eval(line)
-        siteTypeList.append(site(int(len(siteTypeList)),row[0],row[1],row[2],row[3],row[4]))
+        placeTypeList.append(place(int(len(placeTypeList)), row[0], row[1], row[2], row[3], row[4], row[5]))
 
-def createSite(sTID, name = -500,inven = -500):        #todo gain ability to reverse lookup sites by location
+
+def createPlace(sTID, name=-500, inven=-500):  #todo gain ability to reverse lookup sites by location
     inv = []
 
     if inven == -500:
-        inven = siteTypeList[sTID].inv
+        inven = placeTypeList[sTID].inv
 
 
     for j in range(len(inven)):
         inv.append(it.createItem(inven[j]))
 
     if name == -500:
-        name = siteTypeList[sTID].name
+        name = placeTypeList[sTID].name
 
-    sites.append(site(int(len(sites)),
-                      name,
-                      siteTypeList[sTID].siteType,
-                      siteTypeList[sTID].area,
-                      siteTypeList[sTID].known,
-                      inv))
-    return sites[int(len(sites)-1)].entityID
+    places.append(place(int(len(places)),
+                        name,
+                        placeTypeList[sTID].placeType,
+                        placeTypeList[sTID].area,
+                        placeTypeList[sTID].known,
+                        inv,
+                        placeTypeList[sTID].health))
+    return places[int(len(places) - 1)].entityID
 
-def visitRegionSite(): #todo split lodInfo into branch options, shop, rumors, revisit known wild location, town inventory, food stores, etc
+
+def visitRegionPlace():  #todo split lodInfo into branch options, shop, rumors, revisit known wild location, town inventory, food stores, etc
     loc = pe.me.location
-    #print("Shop\nRumors\nInfo") #todo make rumors
-    print("\nYou are in " + str(loc) + ".") #todo inn to sleep and recover
+    # print("Shop\nRumors\nInfo") #todo make rumors and info
+    print("\nYou are in " + str(
+        loc) + ".")  #todo once you learn Krog count, make that available in loc info. note "As of datetime, there were X Krogs in loc"
                                                                                 #prints out every known site in location
     for x in range(len(w.world.nodes[loc]['sites'])):
-        if sites[w.world.nodes[loc]['sites'][x]].area == 'town':
-            print(x, sites[w.world.nodes[loc]['sites'][x]].name)
-        if sites[w.world.nodes[loc]['sites'][x]].area == 'wild' and sites[w.world.nodes[loc]['sites'][x]].known == 1:
-            print(x, sites[w.world.nodes[loc]['sites'][x]].name)
+        if places[w.world.nodes[loc]['sites'][x]].area == 'town':
+            print(x, places[w.world.nodes[loc]['sites'][x]].name)
+        if places[w.world.nodes[loc]['sites'][x]].area == 'wild' and places[w.world.nodes[loc]['sites'][x]].known == 1:
+            print(x, places[w.world.nodes[loc]['sites'][x]].name)
     whereGo = int(input())
-    siteActivity(sites[w.world.nodes[loc]['sites'][whereGo]])
+    siteActivity(places[w.world.nodes[loc]['sites'][whereGo]])  #todo can go to hidden sites before finding them
 
 def siteActivity(store):
     #Shops
-    if store.siteType in ('food', 'armor', 'weapon'):
+    if store.placeType in ('food', 'armor', 'weapon'):  #todo note how damaged the building if it is damaged
         print("\nYou are at " + str(store.name))
         buySell = int(input("1: Buy\n2: Sell\n"))
 
@@ -95,12 +103,14 @@ def siteActivity(store):
             for i in range(len(sell)):
                 it.sellItem(pe.me.inv[1][int(sell[i])], store)
 
-    elif store.siteType in ('druid'):
+    elif store.placeType in ('druid'):
         druid()
+
+    elif store.placeType in ('inn'):
+        inn()
 
 def travel(): #todo ability to ask and learn where roads lead.
     loc = pe.me.location
-    roadMap = []
 
     print("\nYou are in " + str(loc) + ".")
     print("There are " + str(len(w.world.edges(loc))) + " roads out of " + str(loc) + ": ")
@@ -113,26 +123,40 @@ def travel(): #todo ability to ask and learn where roads lead.
     trav = int(input("Which road will you travel?\n"))
 
     if trav == -1:
-        return                                                                #escape to not travel
-    dest = list(w.world.neighbors(loc))[trav-1]                          #-1 to fix index issues
-    w.world[loc][dest]['known'] = 1                                  #roads traveled become known
+        return  # escape to not travel
+    dest = list(w.world.neighbors(loc))[trav - 1]  # -1 to fix index issues
+    w.world[loc][dest]['known'] = 1  # roads traveled become known
 
-    durationOfTrip = int(w.world[loc][dest]['length']) / pe.me.overlandSpeed
+    durationOfTrip = m.ceil(int(w.world[loc][dest]['length']) / pe.me.overlandSpeed)
     lengthOfTrip = str(w.world[loc][dest]['length'])
 
-    for i in range(m.ceil(durationOfTrip)):
+    t.createEvent(t.now(), pe.me.name, 'departs', dest, loc)  # create depart event
+
+    for i in range(durationOfTrip):  #random encounters w/ time advancing
  #       encounteredEntity, encounterType = randomEncounter('t',0.3)
         t.timePasses()
         #todo needs road event encounters
 
-    pe.me.location = trav
+    pe.me.location = dest
     print("\nYou walked for " + lengthOfTrip + " miles.")
-    print("It took you " + '%.1f' % durationOfTrip + " hours.")     #todo either make durationgs hourly increments or allow time to increment quarter hour
+    print("It took you %i hours." % durationOfTrip)
+
+    t.createEvent(t.now(), pe.me.name, 'arrives', dest,dest)
 
     return
 
-def worldInfo(cap):
-  print("The capital city is " + str(cap))
+
+def exploreRegion(duration):
+    then = w.world.graph['hour']  # todo create explore event?
+    for j in range(duration):
+        t.timePasses()
+        encounteredEntity, encounterType = randomEncounter('rmws', 0.35)
+        if encounteredEntity != -1:
+            now = w.world.graph['hour']  # todo while continueing to explore, skip encounters already found this trip
+            print("\nYou explore for", str(now - then), "hours, and...")
+            return encounteredEntity, encounterType  # todo hours listed as negative if day rolls over
+    print("\nYou explore for", duration, "hours and find nothing.")  # todo option to keep exploreing
+    return -1, -1
 
 def randomEncounter(encounterCode, encounterRate):
     encounterList = []
@@ -141,7 +165,7 @@ def randomEncounter(encounterCode, encounterRate):
         for i in range(len(w.world.nodes[pe.me.location]['monsters'])):                     # generate encounter list from monsters and wild sites
             encounterList.append([w.world.nodes[pe.me.location]['monsters'][i], 'm'])
         for i in range(len(w.world.nodes[pe.me.location]['sites'])):
-            if sites[w.world.nodes[pe.me.location]['sites'][i]].area == 'wild':
+            if places[w.world.nodes[pe.me.location]['sites'][i]].area == 'wild':
                 encounterList.append([w.world.nodes[pe.me.location]['sites'][i], 's'])
                                                                                              # todo check if anyone is travelling to encoutner them
     if encounterCode == 't':                                                                            #t: travel
@@ -152,35 +176,49 @@ def randomEncounter(encounterCode, encounterRate):
         return encounterList[found][0], encounterList[found][1]
     return -1, -1                                                                                   #if no encounter, return -1 for nothing to happen
 
-def exploreRegion(duration):
-    then = w.world.graph['hour']
-    for j in range(duration):
-        t.timePasses()
-        encounteredEntity, encounterType = randomEncounter('rmws', 0.35)  # todo option to re-loot dead bodies
-        if encounteredEntity != -1:
-            now = w.world.graph['hour']                                  # todo while continueing to explore, skip encounters already found this trip
-            print ("\nYou explore for" ,str(now - then), "hours, and...")   #todo check if found dead body and give option to keep exploring
-            return encounteredEntity, encounterType
-    print("\nYou explore for", duration, "hours and find nothing.")     #todo option to keep exploreing
-    return -1, -1
-
 def druid():
     #todo add option to trade krog teeth for curative herbs
     print("Give me 2 Krog Guts and I can tell you how many Krogs are left in a region.")
-    count = 0
+    gutCount = 0
+    krogCount = 0
     guts = []
+
     for i in range(len(pe.me.inv[1])):
         if it.items[pe.me.inv[1][i]].itemType == "Krog Guts":
             guts.append(pe.me.inv[1][i])  # list of itemID of every krog guts
-            count += 1
-    print("You have", count)
+            gutCount += 1
+    print("You have", gutCount)
     giveGuts = input("Give the guts? (y/n)")
-    if giveGuts == 'y' and count >= 2:  # if the player has enough guts and gives them up
+
+    if giveGuts == 'y' and gutCount >= 2:  # if the player has enough guts and gives them up
         regionToSearch = int(input("Which region? "))
         for j in range(len(w.world.node[regionToSearch]['monsters'])):  # count all living krogs in the node
-            if pe.persons[w.world.node[regionToSearch]['monsters'][j]].currentHP > 0:
-                count += 1
-        print("There are", count, "krogs still alive around", regionToSearch)
+            if pe.persons[w.world.node[regionToSearch]['monsters'][j]].currentHP >= 1:
+                krogCount += 1
+        print("There are", krogCount, "krogs still alive around", regionToSearch)
 
         pe.me.inv[1].remove(guts[0])  # using the list of guts, remove those from player inventory
         pe.me.inv[1].remove(guts[1])
+
+
+def inn():
+    print(
+        "1: Relax at the bar\n2: Gather rumors\n3: Get directions\n4: Rent a room")  # todo option to keep things in your room and rent for X days, etc
+    doWhat = int(input())
+
+    if doWhat == 1 or doWhat == 4:
+        sleepTime = int(input("Sleep for how many hours? "))
+        t.timePasses(sleepTime)
+
+    elif doWhat == 3:
+        dest = int(input("To where? "))
+        route = nx.shortest_path(w.world, pe.me.location, dest)
+        t.timePasses()
+
+        if len(route) >= 6:
+            print("Never heard of it.")
+        elif len(route) < 6 and len(route) >= 4:
+            print(f"Not sure exactly, but I know you have to travel {w.world[pe.me.location][route[1]][
+                'description']} to {route[1]} to get there.")
+        elif len(route) < 4:
+            print(route)  #todo make this speech

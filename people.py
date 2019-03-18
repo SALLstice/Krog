@@ -1,17 +1,31 @@
-import csv
 import items as it
+import worlds as w
 
 persons = []
 personTypeList = []
+futureDead = []
 
 class person:
-    def __init__(self, entityID, personType, name, inv, stats, currentHP):
+    def __init__(self, entityID, personType, name, inv, stats, currentHP, eventTimer, eventType, eventTarget):
         self.entityID = entityID
         self.personType = personType
         self.name = name
         self.inv = inv
         self.stats = stats
         self.currentHP = currentHP
+        self.eventTimer = eventTimer
+        self.eventType = eventType
+        self.eventTarget = eventTarget
+
+
+class dead:
+    def __init__(self, entityID, personType, name, inv, deathDate, deathLocation):
+        self.entityID = entityID
+        self.personType = personType
+        self.name = name
+        self.inv = inv
+        self.deathDate = deathDate
+        self.deathLocation = deathLocation
 
 class player:
     def __init__(self,name,location,currentHP,maxHP, strength, tough, overlandSpeed, inv):
@@ -32,24 +46,28 @@ def createPlayer(name,location, currentHP,maxHP, strength, tough, overlandSpeed,
         inv[1][j]=it.createItem(inv[1][j])
     me = player(name,location, currentHP,maxHP, strength, tough, overlandSpeed,inv)
 
-#create personList from file
 with open('personList.txt') as f:
     for line in f:
         row = eval(line)
-        personTypeList.append(person(int(len(personTypeList)),row[0],row[1],row[2],row[3],row[4]))
+        personTypeList.append(
+            person(int(len(personTypeList)), row[0], row[1], row[2], row[3], row[4], row[5], row[6], row[7]))
 
-#generates personEntityList
 def createPerson(pTID, number = 1, inv = -500, name = 'null', currentHP = -500):
     multiAdd = []
-    inven = []
     for i in range(number):
+        inven = []
+
         if currentHP == -500:
             currentHP = personTypeList[pTID].stats[0]
+
         if inv == -500:
-            inven = personTypeList[pTID].inv        #todo items are never created. Thats probably wrong?
-        if inv != -500:
+            for k in range(len(personTypeList[pTID].inv)):
+                inven.append(
+                    it.createItem(personTypeList[pTID].inv[k]))  # todo items are never created. Thats probably wrong?
+        elif inv != -500:
             for j in range(len(row[2])):
                 inven.append(it.createItem(row[2][j]))
+
         if personTypeList[pTID].name == 'null':                     #if the person has no name (like a krog), make the name the person type
             name = personTypeList[pTID].personType
 
@@ -58,13 +76,32 @@ def createPerson(pTID, number = 1, inv = -500, name = 'null', currentHP = -500):
                               name,
                               inven,
                               personTypeList[pTID].stats,
-                              currentHP))
+                              currentHP,
+                              personTypeList[pTID].eventTimer,
+                              personTypeList[pTID].eventType,
+                              personTypeList[pTID].eventTarget))
+
         multiAdd.append(persons[len(persons)-1].entityID)
 
     if number == 1:
-        return [persons[int(len(persons) - 1)].entityID]
+        return persons[int(len(persons) - 1)].entityID
     if number > 1:
         return multiAdd
+
+
+def createBody(e):
+    persons.append(person(int(len(persons)),
+                          personTypeList[2].personType,
+                          futureDead[e.person].name,
+                          futureDead[e.person].inv,
+                          0,
+                          0,
+                          0,
+                          0,
+                          0))
+
+    w.world.nodes[e.location]['monsters'].append(persons[int(len(persons) - 1)].entityID)
+
 
 def playerInfo():
     print("Name:",me.name)

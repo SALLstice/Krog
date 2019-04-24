@@ -1,0 +1,6 @@
+personType,inv,strength,maxHP,defense,dodge,speed,event,eventTimer
+Nobody,0,0,0,0,0,0,,-1
+Baby Krog,6 6,2,4,0,4,2,grow,45
+Human,0,1,10,0,0,1,,-1
+Adolescent Krog,6,3,10,2,2,4,,-1
+Resting King Krog,0,20,1000,20,60,3,,-1

@@ -1,0 +1,16 @@
+itemType,use,cost,baseEffectValue,secondaryEffectValue,special,specialValue
+,none,0,0,0,0,0
+Club,weapon,100,3,0,0,0
+Clothing,armor,0,1,0,0,0
+Short Sword,weapon,10,2,0,0,0
+Padded Armor,armor,200,3,0,0,0
+Herbs,consume,5,0,0,Healing,4
+Krog Guts,consume,2,2,2,1,0
+Krog Tooth,consume,6,6,0,0,0
+Krog Skin,consume,10,10,0,0,0
+Bread,consume,2,2,3,3,0
+Short Sword,weapon,1000,1000,0,0,0
+Wooden Shield,shield,200,200,0,0,0
+Leather Armor,armor,800,800,0,0,0
+Ale,consume,1,1,3,1,0
+Super Sword,weapon,1,1000,120,0,0

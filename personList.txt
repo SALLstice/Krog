@@ -1,5 +1,0 @@
-'no one',               'null',     [],         0,            0,      0,      0,              0
-'Baby Krog',            'null',     [6,7],      [4,2,0],      4,      48,     'grow',         3
-'Human',                'null',     [],         [10,2,0],     10,     0,      0,              0
-'Adolescent Krog',      'null',     [6,7,8],    [10,4,2],     10,     48,     0,              0
-'Resting Ultra Krog',   'null',     [],         [1000,4,2],   1000,   100,    'awaken',       0

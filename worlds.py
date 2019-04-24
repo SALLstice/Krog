@@ -1,17 +1,18 @@
 import pickle as p
+import random as r
 
 import networkx as nx
 
 import items as it
 import people as pe
 import places as pl
-import random as r
 import times as t
 
 world = 5
 
 def buildWorld(numCities, infestation):     #todo alternate worlds?
     global world
+
 
     capidx = 0
     it.createItem(0)
@@ -40,23 +41,24 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
     #give each node sites and people
     for x in range(len(web.nodes)):
         web.nodes[x]['label'] = int(x)
-        web.nodes[x]['sites'] = [pl.createPlace(1, "Bakery"),
-                                 pl.createPlace(2, "Weapon Shop"),
-                                 pl.createPlace(3, "Armory"),
-                                 pl.createPlace(5, "Tavern & Inn")]
+        web.nodes[x]['sites'] = [pl.createPlace(1),
+                                 pl.createPlace(2),
+                                 pl.createPlace(3),
+                                 pl.createPlace(5)]
 
                                 #todo food sites generate food supply
 
                                 #todo every site has inventory and wants and will buy from neighboring nodes for those goods
 
         numKrog = r.randrange(infestation + 3, 2 * (infestation + 4))
-        web.nodes[x]['monsters'] = pe.createPerson(1,
-                                                   numKrog)  # todo add savagery attr to nodes which affect number and strength of krogs
+
+        web.nodes[x]['monsters'] = pe.createPerson(1, numKrog)
+        # todo add savagery attr to nodes which affect number and strength of krogs
         # todo randomize krog growth times
 
     web.nodes[r.randrange(len(web.nodes))]['sites'].append(
         pl.createPlace(4, "Druid Circle"))  # create Druid Circle in a random node
-    web.nodes[r.randrange(len(web.nodes))]['monsters'].append(pl.createPerson(4))  # create Krog Hill in a random node
+    web.nodes[r.randrange(len(web.nodes))]['monsters'].append(pl.createPlace(4))  # create Krog Hill in a random node
 
     web.graph['instability'] = 0
     web.graph['capital'] = capidx
@@ -71,7 +73,8 @@ def worldInfo():
 def saveWorld():
     global world
 
-    nx.write_gml(world, r'world/world.kr')
+    nx.write_gpickle(world, r'world/world.kr')
+    # nx.write_gml(world, r'world/world.kr')
 
     with open(r"world/items.kr", "wb") as pit:
         p.dump(it.items, pit)
@@ -94,7 +97,8 @@ def saveWorld():
 def loadWorld():
     global world
 
-    world = nx.read_gml(r'world/world.kr')
+    world = nx.read_gpickle(r'world/world.kr')
+    #world = nx.read_gml(r'world/world.kr')
     world = nx.convert_node_labels_to_integers(world)
 
     with open(r"world/items.kr", "rb") as pit:
@@ -117,7 +121,8 @@ def loadWorld():
 def resetWorld():  # todo I think dead monster inventory loot resets
     global world
 
-    world = nx.read_gml('world/worldStart.kr')
+    world = nx.read_gpickle(r'world/world.kr')
+    #world = nx.read_gml('world/worldStart.kr')
     world = nx.convert_node_labels_to_integers(world)
 
     with open(r"world/itemsStart.kr", "rb") as pit:
@@ -141,7 +146,8 @@ def resetWorld():  # todo I think dead monster inventory loot resets
 
 
 def saveWorldState():
-    nx.write_gml(world, 'world/worldStart.kr')  # saves the world state for future characters
+    nx.write_gpickle(world, r'world/world.kr')
+    #nx.write_gml(world, 'world/worldStart.kr')  # saves the world state for future characters
 
     with open(r"world/itemsStart.kr", "wb") as pit:
         p.dump(it.items, pit)

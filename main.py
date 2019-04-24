@@ -1,29 +1,17 @@
 import combat as c
-import debug as d
-import items as it
+
+import gui as g
 import people as pe
-import places as pl
-import times as t
 import worlds as w
 
 debugMode = 0
 # todo save character to use. move character file when they die. or just delete?
 name = input("Enter your name: ")
 
-it.items.append(it.item(int(len(it.items)),                                             #create null itemType
-                        it.itemTypeList[0].itemType,
-                        it.itemTypeList[0].equip,
-                        it.itemTypeList[0].combatValue,
-                        it.itemTypeList[0].cost,
-                        it.itemTypeList[0].effect,
-                        it.itemTypeList[0].effectValue,
-                        '',
-                        ''))
-
 try:
     f = open('world/world.kr')  # check if world file already exists
     w.resetWorld()  # then load it if it does
-    print("World Loaded Successfully")
+    # print("World Loaded Successfully")
 
 except FileNotFoundError:  # if it doesn't exist...
     worldSize = int(input("Number of Cities? "))
@@ -36,7 +24,7 @@ except FileNotFoundError:  # if it doesn't exist...
     else:
         exit()
 
-startlocation = 0  #todo randomize start location
+startLocation = 0  #todo randomize start location
 maxHP = 10
 stren = 2
 tough = 2
@@ -44,22 +32,32 @@ overland = 3
 equip = [3, 0, 2, 0, 0]
 bag = [5]
 money = 0
+speed = 4
 
 
 # todo different race options?
-pe.createPlayer(name, startlocation, maxHP, maxHP, stren, tough, overland, [equip, bag, money])
+# pe.createPlayer(name, startLocation)
+
+pe.createPlayer('human', name, startLocation)
+
+# kingKrogLocation = r.randrange(r.randrange(len(w.world.nodes)))
+pe.createBoss('King Krog', [3, 0], 1000, 1, 200)
 
 # todo adult monsters can birth babies
-while 1:
-    w.saveWorld()
-    print("\nYou are in " + str(pe.me.location) + ".")
-    print("it is %i:00. The date is %i/%i/%i" % (
-    w.world.graph['hour'], w.world.graph['month'], w.world.graph['day'], w.world.graph['year']))
-    print("\n1 : Explore\n2 : Status\n3 : Region\n4 : World") #todo reorder?
-    if debugMode == 1:
-        print("99: Debug Help")
-    a = int(input())
 
+g.init()
+
+w.saveWorld()
+
+if pe.kingKrog.location == pe.me.location:
+    print("The King Krog Is Here!")
+    c.bossCombat()
+else:
+    g.dispTown()
+
+g.gwin.mainloop()
+
+"""
     if a == 0:
         w.saveWorld()
         quit()
@@ -103,6 +101,8 @@ while 1:
         pe.me.currentHP = int(input("hp? "))
     elif a == 105 and debugMode == 1:
         d.showMap()
+    elif a == 106 and debugMode == 1:
+        print(f"\nKing Krog\nSleep timer: {pe.kingKrog.sleepTimer}\nHealth: {pe.kingKrog.currentHP}\nLocation: {pe.kingKrog.location}\nAttack Target: {pe.kingKrog.attackTarget}")
     elif a == 99 and debugMode == 1:
         print("100: Find All Hidden Sites")
         print("101: Spawn Item")
@@ -110,3 +110,5 @@ while 1:
         print("103: Auto-Druid")
         print("104: Set HP")
         print("105: Show Node Map")
+        print("106: King Krog Status")
+"""

@@ -1,17 +1,20 @@
-import people as pe
 import random as r
+
+import gui as g
+import people as pe
 import worlds as w
 
 history = []
 
 
 class notableEvent:
-    def __init__(self, datetime, person, event, target, location):
+    def __init__(self, datetime, person, event, target, location, extra):
         self.datetime = datetime
         self.person = person
         self.event = event
         self.target = target
         self.location = location
+        self.extra = extra
 
 
 def createCalendar(web):  # todo make seasons, randomize months and seasons, etc
@@ -51,10 +54,10 @@ def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungr
                 doEvent(events)
 
         for j in pe.persons:  # check each person entity if they have a time-based event
-            j.eventTimer -= 1
             if j.eventTimer == 0:
-                j.eventTimer -= 1  # prevent timer from growing infinately
-                personEvent(j)
+                j.eventTimer -= 1  # todo prevent timer from growing infinately
+                # personEvent(j) todo re-add
+            j.eventTimer = int(j.eventTimer) - 1
 
         if w.world.graph['hour'] >= 24:
             w.world.graph['hour'] -= 24
@@ -65,7 +68,7 @@ def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungr
         if w.world.graph['month'] >= 13:
             w.world.graph['month'] -= 12
             w.world.graph['year'] += 1
-
+    g.gwin.timeL['text'] = f"Time: {w.world.graph['hour']}:00"
 
 def personEvent(pers):
     if pers.eventType == 'grow' and pers.currentHP >= 1:
@@ -87,29 +90,32 @@ def personEvent(pers):
         pe.persons[pers.entityID].eventType = 'destroy'
 
     if pers.eventType == 'destroy':
-        ...
+        print('destory')
 
 
-def createEvent(datetime, person, event, target, location):
+def createEvent(datetime, person, event, target, location, extra=0):
     if target in [o.target for o in history] and event in [p.event for p in
                                                            history]:  # todo event for items moving, buying/selling/looting
         w.world.graph['instability'] += 1
 
     history.append(
-        notableEvent(datetime, person, event, target, location))  # todo create event for deal damage to Ultra Krog
+        notableEvent(datetime, person, event, target, location,
+                     extra))  # todo create event for deal damage to Ultra Krog
 
 
 def printHistory():
     with open('world/historyLog.txt', 'w') as f:
         for i in history:
             f.write(
-                f"at {i.datetime}, {i.person} {i.event} to {pe.persons[i.target].name} {i.target} in {i.location}\n")
+                f"at {i.datetime}, {i.person} {i.event} {i.target.name} {i.target.entityID} for {i.extra} in {i.location}\n")
 
     f.close()
 
 
 def doEvent(e):
     if e.event == 'kills':
-        pe.persons[e.target].currentHP = 0
+        e.currentHP = 0
     if e.event == 'died':
         pe.createBody(e)
+    if e.event == 'wounds':
+        e.currentHP -= e.extra

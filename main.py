@@ -1,5 +1,3 @@
-import combat as c
-
 import gui as g
 import people as pe
 import worlds as w

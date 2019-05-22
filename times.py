@@ -30,8 +30,7 @@ def createCalendar(web):  # todo make seasons, randomize months and seasons, etc
 
 
 def now():
-    return f"{w.world.graph['year']:04d}{w.world.graph['month']:02d}{w.world.graph['day']:02d}{w.world.graph[
-        'hour']:02d}"
+    return f"{w.world.graph['year']:04d}{w.world.graph['month']:02d}{w.world.graph['day']:02d}{w.world.graph['hour']:02d}"
     # str(w.world.graph['year']) + str(w.world.graph['month']) + str(w.world.graph['day']) + str(w.world.graph['hour'])
 
 
@@ -69,6 +68,7 @@ def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungr
             w.world.graph['month'] -= 12
             w.world.graph['year'] += 1
     g.gwin.timeL['text'] = f"Time: {w.world.graph['hour']}:00"
+    g.gwin.dateL["text"] = f"Date: {w.world.graph['month']}/{w.world.graph['day']}/{w.world.graph['year']}"
 
 def personEvent(pers):
     if pers.eventType == 'grow' and pers.currentHP >= 1:
@@ -94,6 +94,8 @@ def personEvent(pers):
 
 
 def createEvent(datetime, person, event, target, location, extra=0):
+    pe.savePlayer()
+
     if target in [o.target for o in history] and event in [p.event for p in
                                                            history]:  # todo event for items moving, buying/selling/looting
         w.world.graph['instability'] += 1
@@ -114,8 +116,8 @@ def printHistory():
 
 def doEvent(e):
     if e.event == 'kills':
-        e.currentHP = 0
+        e.target.currentHP = 0
     if e.event == 'died':
         pe.createBody(e)
     if e.event == 'wounds':
-        e.currentHP -= e.extra
+        e.target.currentHP -= e.extra

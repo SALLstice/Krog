@@ -1,5 +1,5 @@
 import tkinter as tk
-
+import events as ev
 import items as it
 import people as pe
 import places as pl
@@ -15,6 +15,7 @@ def init():
 
     gwin = gui(root)
     gwin.attributes("-topmost", True)
+    gwin.attributes("-topmost", False)
 
 
 class gui(tk.Tk):
@@ -33,54 +34,52 @@ class gui(tk.Tk):
         self.statusFrame.grid(row=0, column=0, sticky="ns")
         # statusFrame.grid_propagate(0)
 
-        self.nameL = tk.Label(self.statusFrame, text=pe.me.name)
+        self.nameL = tk.Label(self.statusFrame)
         self.nameL.pack(side=tk.TOP)
 
-        self.HPLabel = tk.Label(self.statusFrame, anchor=tk.W, text=f"HP: {pe.me.currentHP}/{pe.me.maxHP}")
-        self.HPLabel.pack(side=tk.TOP, fill=tk.X)
+        self.HPL = tk.Label(self.statusFrame, anchor=tk.W)
+        self.HPL.pack(side=tk.TOP, fill=tk.X)
 
-        self.strL = tk.Label(self.statusFrame, anchor=tk.W, text=f"Str: {pe.me.strength}")
+        self.strL = tk.Label(self.statusFrame, anchor=tk.W)
         self.strL.pack(side=tk.TOP, fill=tk.X)
 
-        self.touL = tk.Label(self.statusFrame, anchor=tk.W, text=f"Tough: {pe.me.tough}")
+        self.touL = tk.Label(self.statusFrame, anchor=tk.W)
         self.touL.pack(side=tk.TOP, fill=tk.X)
 
-        self.ovSpdL = tk.Label(self.statusFrame, anchor=tk.W, text=f"Ov Spd: {pe.me.overlandSpeed}")
+        self.ovSpdL = tk.Label(self.statusFrame, anchor=tk.W)
         self.ovSpdL.pack(side=tk.TOP, fill=tk.X)
 
-        self.TIBSSpdL = tk.Label(self.statusFrame, anchor=tk.W, text=f"TIBS Spd: {pe.me.speed}")
+        self.TIBSSpdL = tk.Label(self.statusFrame, anchor=tk.W)
         self.TIBSSpdL.pack(side=tk.TOP, fill=tk.X)
 
         self.div = tk.Label(self.statusFrame, text="----------")
         self.div.pack(side=tk.TOP, fill=tk.X)
 
-        self.eqWeapL = tk.Label(self.statusFrame, anchor=tk.W, justify=tk.LEFT,
-                                text=f"Wea: {pe.me.equippedWeapon.itemType}")
+        self.eqWeapL = tk.Label(self.statusFrame, anchor=tk.W, justify=tk.LEFT)
         self.eqWeapL.pack(side=tk.TOP, fill=tk.X)
 
-        self.eqShiL = tk.Label(self.statusFrame, anchor=tk.W, text=f"Shi: {pe.me.equippedShield.itemType}")
+        self.eqShiL = tk.Label(self.statusFrame, anchor=tk.W)
         self.eqShiL.pack(side=tk.TOP, fill=tk.X)
 
-        self.eqArmL = tk.Label(self.statusFrame, anchor=tk.W, text=f"Arm: {pe.me.equippedArmor.itemType}")
+        self.eqArmL = tk.Label(self.statusFrame, anchor=tk.W)
         self.eqArmL.pack(side=tk.TOP, fill=tk.X)
 
-        self.eqAcc1L = tk.Label(self.statusFrame, anchor=tk.W, text=f"Acc 1: {pe.me.equippedAcc1.itemType}")
+        self.eqAcc1L = tk.Label(self.statusFrame, anchor=tk.W)
         self.eqAcc1L.pack(side=tk.TOP, fill=tk.X)
 
-        self.eqAcc2L = tk.Label(self.statusFrame, anchor=tk.W, text=f"Acc 2: {pe.me.equippedAcc2.itemType}")
+        self.eqAcc2L = tk.Label(self.statusFrame, anchor=tk.W)
         self.eqAcc2L.pack(side=tk.TOP, fill=tk.X)
 
         self.div2 = tk.Label(self.statusFrame, text="----------")
         self.div2.pack(side=tk.TOP)
 
-        self.locL = tk.Label(self.statusFrame, text=f"You are in {pe.me.location}.")
+        self.locL = tk.Label(self.statusFrame)
         self.locL.pack(side=tk.TOP)
 
-        self.timeL = tk.Label(self.statusFrame, text=f"Time: {w.world.graph['hour']}:00")
+        self.timeL = tk.Label(self.statusFrame)
         self.timeL.pack(side=tk.TOP)
 
-        self.dateL = tk.Label(self.statusFrame,
-                              text=f"Date: {w.world.graph['month']}/{w.world.graph['day']}/{w.world.graph['year']}")
+        self.dateL = tk.Label(self.statusFrame)
         self.dateL.pack(side=tk.TOP)
 
         # *****BUTTON	FRAME ******
@@ -153,28 +152,88 @@ class gui(tk.Tk):
         self.textInput = tk.Entry(self.mainFrame)
         self.textInput.grid(row=13, column=0)
 
+def updateStatus():
+    gwin.nameL["text"] = pe.me.name
+    gwin.HPL['text'] = f"HP: {pe.me.currentHP}/{pe.me.maxHP}"
+    gwin.strL['text'] = f"Str: {pe.me.strength}"
+    gwin.touL['text'] = f"Tough: {pe.me.tough}"
+    gwin.ovSpdL['text'] = f"Ov Spd: {pe.me.overlandSpeed}"
+    gwin.TIBSSpdL['text'] = f"TIBS Spd: {pe.me.speed}"
+    gwin.eqWeapL['text'] = f"Wea: {pe.me.equippedWeapon.name}"
+    gwin.eqShiL['text'] = f"Shi: {pe.me.equippedShield.itemType}"
+    gwin.eqArmL['text'] = f"Arm: {pe.me.equippedArmor.itemType}"
+    gwin.eqAcc1L['text'] = f"Acc 1: {pe.me.equippedAcc1.itemType}"
+    gwin.eqAcc2L['text'] = f"Acc 2: {pe.me.equippedAcc2.itemType}"
+    gwin.locL['text'] = f"{w.world.nodes[pe.me.location]['name']}"
+    gwin.timeL['text'] = f"Time: {w.world.graph['hour']}:00"
+    gwin.dateL['text'] = f"Date: {w.world.graph['month']}/{w.world.graph['day']}/{w.world.graph['year']}"
 
 def dispTown():
+    gwin.button0.grid()
+    gwin.button1.grid()
+    gwin.button2.grid()
+    gwin.button3.grid()
     clearText()
-    setText(label4=f"You are in  {str(pe.me.location)}.")
+    setText(label4=f"You are in  {w.world.nodes[pe.me.location]['name']}.")
 
     gwin.button0.configure(text="Explore", command=lambda: pl.setupExploreRT())
     gwin.button1.configure(text="Status", command=lambda: status())
     gwin.button2.configure(text="Region", command=lambda: pl.visitRegionPlace())
-    gwin.button3.configure(text="World", command="")
+    gwin.button3.configure(text="World", command=lambda: initSelect('Travel',w.world[pe.me.location],'_atlas','description','travel','town'))
 
+def setName(text):
+    nameList=[]
+    highest = 0
+
+    pe.nameDebugCheck(text)
+
+    if text == "":
+        text = "Satchmo"
+
+    for event in ti.history:
+        if text in event.person:
+            nameList.append(event.person)
+
+    if len(nameList) > 0:
+        for names in nameList:
+            tmp = names.split()
+            try:
+                gen = int(tmp[len(tmp)-1])
+            except:
+                gen = tmp[len(tmp)-1]
+
+            if type(gen) == int:
+                if gen > highest:
+                    highest = gen
+            elif tmp[len(tmp)-1] == "Jr.":
+                highest = 3
+            else:
+                highest = 2
+
+        if highest > 0:
+            if highest == 2:
+                text += " Jr."
+            elif highest > 2:
+                text += " " + str(highest+1)
+            #todo Roman numerals
+
+
+    pe.me.name = text
+    gwin.nameL["text"] = text
+    gwin.textInput.delete(0, 'end')
+
+    pl.arrive()
 
 def settings():
     gwin.button3["text"] = "Quit"
     gwin.button3["bg"] = "red"
     gwin.button3["command"] = quitGame
 
-
-def clearText():
+def clearText(skip=[]):
     for i in range(9):
-        tempstr = "label" + str(i)
-        gwin.__dict__[tempstr]["text"] = ""
-
+        if i not in skip:
+            tempstr = "label" + str(i)
+            gwin.__dict__[tempstr]["text"] = ""
 
 def setAllText(adjust=0, *args):
     for value, key in enumerate(args[0]):
@@ -183,18 +242,17 @@ def setAllText(adjust=0, *args):
 
     gwin.update()
 
-
 def setText(**kwargs):
     for value, key in enumerate(kwargs):
         gwin.__dict__[list(kwargs.keys())[value]]["text"] = list(kwargs.values())[value]
     gwin.update()
 
-
 def quitGame():
     w.saveWorld()
+    if pe.me.currentHP > 0:
+        pe.savePlayer()
     ti.printHistory()
     quit()
-
 
 def status():
     gwin.button0["text"] = "Skills"
@@ -208,26 +266,52 @@ def status():
     gwin.button3["text"] = "Return"
     gwin.button3["command"] = lambda: dispTown()
 
-
-def initSelect(titleDisplay, holder, list, displayAttr, do, returnTo, selection=1, sellTo=""):
+def initSelect(titleDisplay, holder, holderList, displayAttr, do, returnTo, selection=1, sellTo="", doNotClear=[]):
     gwin.button3.config(text="Return", command=lambda: retTo(returnTo))
-
-    clearText()
+    dispList = []
+    clearText(doNotClear)
     gwin.label0["text"] = titleDisplay
+    loc = pe.me.location
 
-    if list == "":
+    if do == 'travel':
+        for j in range(len(list(w.world.neighbors(loc)))):
+            #dispList.append(w.world[loc][list(w.world.neighbors(loc))[j]]['route'].desc)
+
+            if w.world[loc][list(w.world.neighbors(loc))[j]]['route'].known == 0:  # check if the road is unknown
+                dispList.append(w.world[loc][list(w.world.neighbors(loc))[j]]['route'].desc)     #if road is unknown, print desc
+            else:                       #check if road is known
+                dispList.append(f"The road leading to {w.world.nodes[list(w.world.neighbors(loc))[j]]['name']}")
+        holderList = list(w.world.neighbors(loc))
+
+    elif holderList == "":
         dispList = [getattr(o, displayAttr) for o in holder]
+        #for attrs in displayAttr:
+        #    tempstr += getattr(holder, attrs) + " -- "
+        #
+        #dispList.append(tempstr)
     else:
-        dispList = [getattr(o, displayAttr) for o in getattr(holder, list)]
+        if type(displayAttr) == list:
+
+            for item in getattr(holder, holderList):
+                tempstr = ""
+                for attrs in displayAttr:
+                    tempstr += str(getattr(item,attrs)) + " -- "
+                tempstr = tempstr[:-4]
+                dispList.append(tempstr)
+        else:
+            if displayAttr == "":
+                dispList = [o for o in getattr(holder, holderList)]
+            else:
+                dispList = [getattr(o, displayAttr) for o in getattr(holder, holderList)]
 
     setAllText(1, dispList)
-    select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo)
-
+    select(titleDisplay, dispList, holder, holderList, displayAttr, do, returnTo, selection, sellTo)
 
 def retTo(returnTo):
     if returnTo == "town":
-        dispTown()
-
+        pl.arrive()
+    else:
+        pl.arrive()
 
 def select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo):
     # todo add scrolling functionality
@@ -246,7 +330,6 @@ def select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, sele
     gwin.button1["command"] = lambda: selectItem(titleDisplay, dispList, holder, list, displayAttr, do, returnTo,
                                                  selection, sellTo)
 
-
 def down(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo):
     selectlabel = "label" + str(selection)
     holdlabel = gwin.__dict__[selectlabel]["text"]
@@ -257,7 +340,6 @@ def down(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, select
     else:
         select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo)
 
-
 def up(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo):
     selectlabel = "label" + str(selection)
     holdlabel = gwin.__dict__[selectlabel]["text"]
@@ -267,7 +349,6 @@ def up(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selectio
         select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection - 1, sellTo)
     else:
         select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo)
-
 
 def selectItem(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo):
     # todo option to use or drop
@@ -293,6 +374,15 @@ def selectItem(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, 
         else:
             dispTown()
 
+    if do == "brew":
+        it.brew(holder, selection-1)
+
+    if do == 'travel':
+        dest = list[selection-1]
+        pl.setupTravelRT(dest)
+
+    if do == 'event':
+        ev.eventResults(holder.result[selection-1])
 
 def setButtons(b0t="", b0c="", b1t="", b1c="", b2t="", b2c="", b3t="", b3c=""):
     if b0c == "":
@@ -318,3 +408,4 @@ def setButtons(b0t="", b0c="", b1t="", b1c="", b2t="", b2c="", b3t="", b3c=""):
     else:
         gwin.button3["text"] = b3t
         gwin.button3["command"] = lambda: eval(b3c)
+

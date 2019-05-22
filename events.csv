@@ -1,0 +1,2 @@
+title,type,location,introText,options,result,outroText
+beggar,choice,road,'gib muney plz',"""Give 1 copper"", ""Give nothing""","""beggardivine"", 'greed'","""THanks maybe idk"""

@@ -1,36 +1,35 @@
 import csv
 import math as m
 import random as r
-
 import networkx as nx
 import time
-
 import gui as g
 import items as it
 import newCombat as c
 import people as pe
 import times as t
 import worlds as w
+import events as ev
 
 placeTypeList = []
 places = []
-exploring = 0
+#exploring = 0
 
 class place:
     def __init__(self, name, currentHP):
         self.name = name
         self.currentHP = currentHP
 
-
 class placeType:
-    def __init__(self, type, use, area, known, inv, maxHP):
+    def __init__(self, type, use, area, known, inv, maxHP, extraSiteOption, recipes):
         self.type = type
         self.use = use
         self.area = area
         self.known = known
         self.inv = inv
         self.maxHP = maxHP
-
+        self.extraSiteOption = extraSiteOption
+        self.recipes = recipes
 
 with open('placeList.csv') as f:
     reader = csv.reader(f)
@@ -41,7 +40,7 @@ with open('placeList.csv') as f:
             try:
                 tempval = int(row[val])
             except:
-                if attr == "inv":
+                if attr in ["inv", "recipes"]:
                     tempval = row[val].split()
                     tempval = [int(x) for x in tempval]
                 else:
@@ -49,7 +48,6 @@ with open('placeList.csv') as f:
 
             setattr(placeTypeList[len(placeTypeList) - 1], attr, tempval)
     f.close()
-
 
 def createPlace(sTID, name="", currentHP=-500):  # todo gain ability to reverse lookup sites by location
     inv = []
@@ -59,17 +57,28 @@ def createPlace(sTID, name="", currentHP=-500):  # todo gain ability to reverse 
 
     places.append(place(name, currentHP))
     for val, attr in enumerate(list(placeTypeList[0].__dict__.keys())):
-        if attr == "inv":
-
+        if attr in ["inv", "recipes"]:
+            templist= []
             invList = getattr(placeTypeList[sTID], attr)
             if invList != 0:
                 for i in invList:
-                    inv.append(it.createItem(i))
-            setattr(places[len(places) - 1], "inv", inv)
+                    templist.append(it.createItem(i))
+            setattr(places[len(places) - 1], attr, templist)
         else:
             setattr(places[len(places) - 1], attr, getattr(placeTypeList[sTID], attr))
 
     return places[int(len(places) - 1)]
+
+def arrive():
+    #todo re-add
+    g.updateStatus()
+
+    if pe.kingKrog.location == pe.me.location:
+        g.clearText()
+        g.setText(label4="The King Krog Is Here!")
+        c.initCombat(pe.kingKrog)
+    else:
+        g.dispTown()
 
 def visitRegionPlace():  #todo split lodInfo into branch options, shop, rumors, revisit known wild location, town inventory, food stores, etc
 
@@ -86,13 +95,13 @@ def visitRegionPlace():  #todo split lodInfo into branch options, shop, rumors, 
 
     # dispList = [o.itemType for o in pe.me.inv]
     display = f"You are in {pe.me.location}."
-    g.initSelect(display, regSites, "", 'type', 'site', 'dispTown')
+    g.initSelect(display, regSites, "", 'type', 'site', 'town')
 
     #siteActivity(places[w.world.nodes[loc]['sites'][whereGo]])  #todo can go to hidden sites before finding them
 
 def siteActivity(store):
     #Shops
-    if store.use in ('food', 'armor', 'weapon'):  # todo note how damaged the building if it is damaged
+    if store.use == "store":  # todo note how damaged the building if it is damaged
         g.clearText()
         g.setText(label4=f"You are at {store.name} {store.type}.")
 
@@ -102,194 +111,275 @@ def siteActivity(store):
         g.gwin.button1["text"] = "Sell"
         g.gwin.button1["command"] = lambda: it.inventory(pe.me, 'sell', 'town', sellTo=store)
 
+        if store.extraSiteOption != "":
+            g.gwin.button2["text"] = store.extraSiteOption
+            g.gwin.button2["command"] = lambda:siteExtra(store)
+        else:
+            g.gwin.button3['text'] = "-"
+            g.gwin.button3['command'] = ""
+
         # g.setButtons("Buy","pl.buyItem(store)", "Sell", "sellItem", "Return", "dispTown")
+    elif store.use == "druid":
+        druid(store)
+    elif store.use == "inn":
+        inn(store)
 
+    def siteExtra(store):
+        if store.extraSiteOption == "Brew":
+            g.clearText()
+            g.initSelect("Brew Potions", store, 'recipes',['itemType'],'brew','town')
 
-# todo re-add
-""" 
-    elif store.placeType in ('druid'):
-        druid()
-
-    elif store.placeType in ('inn'):
-        inn()
-"""
-def travel(): #todo ability to ask and learn where roads lead.
-    loc = pe.me.location
-
-    print("\nYou are in " + str(loc) + ".")
-    print("There are " + str(len(w.world.edges(loc))) + " roads out of " + str(loc) + ": ")
-    print("0 : Don't travel")
-    for j in range(len(list(w.world.neighbors(loc)))):
-        if w.world[loc][list(w.world.neighbors(loc))[j]]['known'] == 0:                         #check if the road is unknown
-            print(j+1, ": " + w.world[loc][list(w.world.neighbors(loc))[j]]['description'])     #if road is unknown, print desc
-        elif w.world[loc][list(w.world.neighbors(loc))[j]]['known'] == 1:                       #check if road is known
-            print(j+1, ": The road leading to " + str(list(w.world.neighbors(loc))[j]))     #if known, print destination
-    trav = int(input("Which road will you travel?\n"))
-
-    if trav == -1:
-        return  # escape to not travel
-    dest = list(w.world.neighbors(loc))[trav - 1]  # -1 to fix index issues
-    w.world[loc][dest]['known'] = 1  # roads traveled become known
-
-    durationOfTrip = m.ceil(int(w.world[loc][dest]['length']) / pe.me.overlandSpeed)
-    lengthOfTrip = str(w.world[loc][dest]['length'])
-
-    t.createEvent(t.now(), pe.me.name, 'departs', dest, loc)  # create depart event
-
-    for i in range(durationOfTrip):  #random encounters w/ time advancing
- #       encounteredEntity, encounterType = randomEncounter('t',0.3)
-        t.timePasses()
-        #todo needs road event encounters
-
-    pe.me.location = dest
-    print("\nYou walked for " + lengthOfTrip + " miles.")
-    print("It took you %i hours." % durationOfTrip)
-
-    t.createEvent(t.now(), pe.me.name, 'arrives', dest,dest)
-
-    return
-
-
-def setupExplore(gwin):
-    gwin.label1["text"] = "Explore up to how many hours? "
-    gwin.button0["text"] = "Accept"
-    gwin.button0["command"] = lambda: exploreRegion(gwin, int(gwin.textInput.get()))
-    return
-
-
-def setupExploreRT():
-    global exploring
-
+def setupTravelRT(dest):
+    g.clearText()
     g.gwin.button1.grid_remove()
     g.gwin.button2.grid_remove()
     g.gwin.button3.grid_remove()
-    exploring = 1
-    g.setText(label4="Exploring")
-    g.gwin.button0["text"] = "Stop Exploring"
+
+    pe.me.exploring = 1
+    loc = pe.me.location
+    cityname = w.world.nodes[dest]['name']
+
+    if  w.world[loc][dest]['route'].known == 1:
+        g.setText(label4=f"Travelling to {cityname}.")
+    else:
+        g.setText(label4=f"Travelling along {w.world[loc][dest]['route'].desc}.")
+    g.gwin.button0["text"] = "Turn Back"
     g.gwin.update()
-    g.gwin.button0["command"] = lambda: stopExplore()
+    g.gwin.button0["command"] = 0 #todo turnback command
+
+    lengthOfTrip = w.world[loc][dest]['route'].length
+
+    #t.createEvent(t.now(), pe.me.name, 'departs', dest, loc)  # create depart event todo make
 
     encounteredEntity = -1
     timer = 0
     montage = ["", ".", ".  .", ".  .  ."]
-    exploreRT(timer, encounteredEntity, montage)
+    realTimeActivity(timer, 'r', montage, 'travel', dest, lengthOfTrip)
 
+def setupExploreRT():
+    pe.me.exploring = 1
+    g.setText(label4="Exploring")
+    g.gwin.button0["text"] = "Stop Exploring"
+    #g.gwin.update()
+    g.gwin.button0["command"] = lambda: stopExplore()
 
-def exploreRT(timer, encounteredEntity, montage):
-    global exploring
+    if pe.me.foraging:
+        g.gwin.button1['text'] = "Stop Sneaking"
+    else:
+        g.gwin.button1['text'] = "Sneak"
+    g.gwin.button1['command'] = lambda: toggleSneak()
+
+    if pe.me.foraging:
+        g.gwin.button2['text'] = "Stop Foraging"
+    else:
+        g.gwin.button2['text'] = "Forage"
+    g.gwin.button2['command'] = lambda:toggleForage()
+
+    #encounteredEntity = -1
+    timer = 0
+    montage = ["", ".", ".  .", ".  .  ."]
+    realTimeActivity(timer, 'rmws', montage, 'explore')
+
+def realTimeActivity(timer, encounterCode, montage, activity, dest=-1, journeyLength=-1, progress=0):
+    ENCOUNTER_RATE = 0.25
+    encounterType = 0
+    encounteredEntity = -1
+    FORAGE_ENC_RATE = 0.20
+    timerRollover = 4
+
+    #durationOfTrip = max(1,m.ceil(int((w.world[loc][dest]['route'].length) / pe.me.overlandSpeed)*w.world[loc][dest]['route'].roughness))
 
     time.sleep(0.5)
     g.setText(label5=montage[timer])
     timer += 1
-    timer %= 4
+    timer %= timerRollover
+
+    if pe.me.sneaking and timer == timerRollover/2:
+        if not pe.skillCheck('Sneaking'):
+            t.timePasses()
+
     if timer == 0:
+
         t.timePasses()
-        encounteredEntity, encounterType = randomEncounter('rmws', 0.35)
+        modEncRate = ENCOUNTER_RATE
+
+        if pe.me.sneaking:
+            modEncRate -= int(pe.getSkill('Sneaking') / 5)
+
+        if pe.me.foraging:
+            modEncRate =+ FORAGE_ENC_RATE
+            if r.randrange(3) == 0: #easy 33% chance of maybe finding something
+                if pe.skillCheck('Foraging'):
+                    pe.me.inv.append(it.createItem('Healing Herbs'))
+                    g.setText(label8='You find Healing Herbs')
+
+        encounteredEntity, encounterType = randomEncounter(encounterCode, modEncRate)
         # todo increase encounter chance based on number of krog
+        #todo have button to flag for forage. disp on label6 item found until timer resets label7 skill increase, increase enc rate
+        if activity == 'travel':
+            progress += pe.me.overlandSpeed * w.world[pe.me.location][dest]['route'].roughness
+            if progress >= journeyLength:
+                pe.me.exploring = 2
+
+                w.world[pe.me.location][dest]['route'].known = 1
+                pe.me.location = dest
+                g.clearText()
+                g.setText(label4=f"You walked for {journeyLength} miles and arrive in {w.world.nodes[dest]['name']}.")
+                # todo make travel work like ExploreRT
+                # todo time passes
+
+                #t.createEvent(t.now(), pe.me.name, 'arrives', dest, dest)  # todo re-add
+
+                g.gwin.button0["text"] = 'Continue'
+                g.gwin.button0['command'] = lambda: arrive()
 
     if encounteredEntity != -1:
         if encounterType == 'm':
-            exploring = 2
-            g.setText(label4=f"You encounter a {encounteredEntity.name}")
-            g.gwin.button0["text"] = "Enter Combat"
-            g.gwin.button0["command"] = lambda: c.initCombat(encounteredEntity)
+            pe.me.exploring = 2
+            status = ""
+            if encounteredEntity.currentHP <= 0:
+                status = "dead "
+
+            elif encounteredEntity.currentHP < encounteredEntity.maxHP:
+                status = "wounded "
+
+            g.setText(label4=f"You encounter a {status}{encounteredEntity.name}")
+            if status != "dead ":
+                g.gwin.button0["text"] = "Enter Combat"
+                g.gwin.button0["command"] = lambda: c.initCombat(encounteredEntity)
+            else:
+                display = "Loot:"
+                g.gwin.button0["text"] = "Loot"
+                g.gwin.button0["command"] = lambda: g.initSelect(display, encounteredEntity, "inv", "itemType", 'loot', 'dispTown')  # todo
+
+                g.gwin.button1["text"] = "Keep Exploring"
+                g.gwin.button1["command"] = lambda: setupExploreRT()
+                g.gwin.button1.grid()
+
+                g.gwin.button2["text"] = "Stop Exploring"
+                g.gwin.button2["command"] = lambda: g.dispTown()
+                g.gwin.button2.grid()
+
             # combatResult = c.combat(encounteredEntity)
         if encounterType == 's':
-            exploring = 2
-            g.setText(label4=f"You encounter a {encounteredEntity.placeType}")
-            places[encounteredEntity].known = 1
+            pe.me.exploring = 2
+            g.setText(label4=f"You encounter a {encounteredEntity.type}")
+            encounteredEntity.known = 1
+            g.gwin.button0["text"] = "Continue"
+            g.gwin.button0["command"] = lambda:siteActivity(encounteredEntity)
+        if encounterType == 'e':
+            pe.me.exploring = 2
+            ev.runEvent(encounteredEntity)
 
-    if exploring == 1:
-        g.gwin.after(0, exploreRT(timer, encounteredEntity, montage))
-    elif exploring == 0:
+    if pe.me.exploring == 1:
+        realTimeActivity(timer, encounterCode, montage,activity,dest,journeyLength,progress)
+
+    if pe.me.exploring == 0:
         g.gwin.button1.grid()
         g.gwin.button2.grid()
         g.gwin.button3.grid()
-        g.dispTown()
-
+        arrive()
 
 def stopExplore():
-    global exploring
+    pe.me.exploring=0
 
-    exploring = 0
+def toggleSneak():
+    if not pe.me.sneaking:
+        pe.me.sneaking = True
+        g.gwin.button1['text'] = 'Stop Sneaking'
+    else:
+        pe.me.sneaking = False
+        g.gwin.button1['text'] = "Sneak"
 
-
-def exploreRegion(gwin, duration):
-
-    then = w.world.graph['hour']  # todo create explore event?
-    for j in range(duration):
-        t.timePasses()
-        encounteredEntity, encounterType = randomEncounter('rmws', 0.35)
-        if encounteredEntity != -1:
-            now = w.world.graph['hour']  # todo while continueing to explore, skip encounters already found this trip
-            gwin.label1["text"] = "You explore for " + str(now - then) + " hours, and..."
-
-            if encounterType == 'm':
-                gwin.label2["text"] = "You encounter a " + pe.persons[encounteredEntity].personType
-                gwin.button0["text"] = "Enter Combat"
-                gwin.button0["command"] = lambda: c.initCombat(gwin, encounteredEntity)
-                # combatResult = c.combat(encounteredEntity)
-            if encounterType == 's':
-                gwin.label2["text"] = "You encounter a " + places[encounteredEntity].placeType
-                places[encounteredEntity].known = 1
-            return
-            # return encounteredEntity, encounterType  # todo hours listed as negative if day rolls over
-
-    gwin.label1["text"] = "\nYou explore for", duration, "hours and find nothing."  # todo option to keep exploreing
-    return -1, -1
+def toggleForage():
+    if not pe.me.foraging:
+        pe.me.foraging = True
+        g.gwin.button2['text'] = 'Stop Foraging'
+    else:
+        pe.me.foraging = False
+        g.gwin.button2['text'] = "Forage"
 
 def randomEncounter(encounterCode, encounterRate):
     encounterList = []
 
-    if encounterCode == 'rmws':                                                              #rmws: region monsters and wild sites
+    if pe.me.name == "Druid": #for debugging
+        pe.me.inv.append(it.createItem('Krog Guts'))
+        pe.me.inv.append(it.createItem('Krog Guts'))
+        for i in w.world.nodes[pe.me.location]['sites']:
+            if i.area == 'wild':
+                encounterList.append([i, 's'])
+
+    elif encounterCode == 'rmws':                                                              #rmws: region monsters and wild sites
         for i in w.world.nodes[pe.me.location]['monsters']:  # generate encounter list from monsters and wild sites
             encounterList.append([i, 'm'])
         for i in w.world.nodes[pe.me.location]['sites']:
             if i.area == 'wild':
                 encounterList.append([i, 's'])
                                                                                              # todo check if anyone is travelling to encoutner them
-    if encounterCode == 't':                                                                            #t: travel
-        encounterList = []                                                                      #todo random events on the road
+    if encounterCode == 'r':                                                                            #t: travel
+        for e in ev.eventList:
+            if e.location == "road":                                                                               #todo random events on the road
+                encounterList.append([e, 'e'])
 
-    if r.random() <= encounterRate:                                                             #determine random enounter, if any
-        found = r.randrange(len(encounterList))
-        return encounterList[found][0], encounterList[found][1]
+        #todo make random enoucnters more common the more populated the region is 2 * (infestation + 4)
+    if len(encounterList) >= 1:
+        if r.random() <= encounterRate:                                                             #determine random enounter, if any
+            found = r.randrange(len(encounterList))
+            return encounterList[found][0], encounterList[found][1]
     return -1, -1                                                                                   #if no encounter, return -1 for nothing to happen
 
-def druid():
+def druid(drood):
     #todo add option to trade krog teeth for curative herbs
-    print("Give me 2 Krog Guts and I can tell you how many Krogs are left in a region.")
+    #todo druid doesn't become known until payedextra. make even for becoming known
+    g.clearText()
+    g.setText(label4= "Give me 2 Krog Guts and I can tell you how many Krogs are left in a region.")
     gutCount = 0
-    krogCount = 0
     guts = []
 
-    for i in range(len(pe.me.inv[1])):
-        if it.items[pe.me.inv[1][i]].itemType == "Krog Guts":
-            guts.append(pe.me.inv[1][i])  # list of itemID of every krog guts
-            gutCount += 1
-    print("You have", gutCount)
-    giveGuts = input("Give the guts? (y/n)")
+    gutList = it.checkInvForItems('Krog Guts', 2)
+    g.gwin.button0["command"] = lambda:checkGuts(gutList)
 
-    if giveGuts == 'y' and gutCount >= 2:  # if the player has enough guts and gives them up
-        regionToSearch = int(input("Which region? "))
-        for j in range(len(w.world.node[regionToSearch]['monsters'])):  # count all living krogs in the node
-            if pe.persons[w.world.node[regionToSearch]['monsters'][j]].currentHP >= 1:
-                krogCount += 1
-        print("There are", krogCount, "krogs still alive around", regionToSearch)
+    def checkGuts(gutCount):
+        if len(gutCount) >= 2:  # if the player has enough guts and gives them up
+            g.setText(label4="Which region? ", label6="", label7="")
+            g.gwin.button0["text"] = "Confirm"
+            g.gwin.button0["command"] = lambda: giveGuts(int(g.gwin.textInput.get()))
+        else:
+            arrive()    #todo
 
-        pe.me.inv[1].remove(guts[0])  # using the list of guts, remove those from player inventory
-        pe.me.inv[1].remove(guts[1])
+        def giveGuts(regionToSearch):
+            krogCount = 0
+            for mon in w.world.node[regionToSearch]['monsters']:  # count all living krogs in the node
+                if mon.currentHP >= 1:
+                    krogCount += 1
+            g.setText(label4=f"There are {krogCount} krogs still alive around {regionToSearch}.")
 
-def inn():
-    print(
-        "1: Relax at the bar\n2: Gather rumors\n3: Get directions\n4: Rent a room")  # todo option to keep things in your room and rent for X days, etc
-    doWhat = int(input())
+            it.removeItemsFromInv(2, 'Krog Guts')
 
-    if doWhat == 1 or doWhat == 4:
-        sleepTime = int(input("Sleep for how many hours? "))
-        t.timePasses(sleepTime)
+            g.gwin.button0['command'] = lambda:arrive() #todo?
 
-    elif doWhat == 3:
+def inn(store):
+    g.gwin.button0['text'] = "Gather Rumors"
+    g.gwin.button0['command'] = lambda:rumors()
+
+    g.gwin.button1['text'] = "Get directions"
+    g.gwin.button1['command'] = lambda:directions()
+
+    g.gwin.button2['text'] = 'Rent a Room'
+    g.gwin.button2['command'] = lambda:rentRoom()
+
+    g.gwin.button3['text'] = 'Return'
+    g.gwin.button3['command'] = lambda:pl.arrive()
+
+    def rumors():
+        pass
+        #todo learn neighboring cities
+        #todo learn locations of druid, dungeons, etc
+        #todo if a PC does well, create rumors of them
+        #todo location of king krog
+        #todo side quests
+
+    def directions():
         dest = int(input("To where? "))
         route = nx.shortest_path(w.world, pe.me.location, dest)
         t.timePasses()
@@ -297,7 +387,30 @@ def inn():
         if len(route) >= 6:
             print("Never heard of it.")
         elif len(route) < 6 and len(route) >= 4:
-            print(f"Not sure exactly, but I know you have to travel {w.world[pe.me.location][route[1]][
-                'description']} to {route[1]} to get there.")
+            print(f"Not sure exactly, but I know you have to travel {w.world[pe.me.location][route[1]]['description']} to {route[1]} to get there.")
         elif len(route) < 4:
-            print(route)  #todo make this speech
+            print(route)  # todo make this speech
+
+    def rentRoom():
+    # todo option to keep things in your room and rent for X days, etc
+        g.clearText()
+        g.setText(label4="Sleep for how many hours?")
+        g.gwin.button0['text'] = 'Continue'
+        g.gwin.button0['command'] = lambda:sleep()
+
+        g.gwin.button3['text'] = 'Return'
+        g.gwin.button3['command'] = lambda:arrive()
+
+        def sleep():
+            sleepTime = int(g.gwin.textInput.get())
+
+            t.timePasses(sleepTime)
+
+            healed = sleepTime * int(pe.me.tough/2)
+            pe.me.currentHP = min(pe.me.maxHP, pe.me.currentHP + healed)
+
+            g.setText(label4=f"You sleep for {sleepTime} hours.")
+            g.setText(label5=f"You heal {healed}.")
+            g.updateStatus()
+
+            g.gwin.button0['command'] = lambda:arrive()

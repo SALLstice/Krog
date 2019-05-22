@@ -1,28 +1,28 @@
 import random as r
-
+import os
 import time as t
-
 import gui as g
 import people as pe
 import times as ti
 
 baddie = -1
 
-
 class statusEffect:
-    def __init__(self, name, effect, effectValue, secondaryValue):
+    def __init__(self, name, effect, effectValue, secondaryValue, duration, timedEffect=0):
         self.name = name
         self.effect = effect
         self.effectValue = effectValue
         self.secondaryValue = secondaryValue
+        self.duration = duration
+        self.timedEffect = timedEffect
 
-
+"""
 class activeStatus:
-    def __init__(self, statusEffect, duration):
+    def __init__(self, statusEffect, duration, effectStrength):
         self.statusEffect = statusEffect
         self.duration = duration
-
-
+        self.effectStrength = effectStrength
+"""
 def initCombat(tempBaddie):
     global baddie
 
@@ -31,53 +31,75 @@ def initCombat(tempBaddie):
     g.gwin.button3.grid()
 
     baddie = tempBaddie
-    setattr(baddie, 'TIBS', 50)
+    setattr(baddie, 'TIBS', 0)
+    setattr(baddie, 'status', [])
+    setattr(baddie, 'atk', 0)
 
-    g.setText(label4=baddie.name, label5=baddie.currentHP)
+    g.setText(label5=baddie.name +": " + str(baddie.currentHP))
+    baddie.TIBS, baddie.atk = readyMonsterAttack()
+    playerTurn()
+
+def readyPlayerAttack():
+    if pe.me.attackType == "Q":
+        pe.me.TIBS = 30
+    if pe.me.attackType == "N":
+        pe.me.TIBS = 50
+    if pe.me.attackType == "S":
+        pe.me.TIBS = 60
+    if pe.me.attackType == "A":
+        pe.me.TIBS = 75
+
     tickUntilTurn()
-
 
 def readyMonsterAttack():
     global gwin
 
-    monsterActions = [5, 35, 100], [10, 5, 2], [75, 60, 30], [-10, 0, 5], ["powerful attack!", "strong attack.",
-                                                                           "fast attack."]
+    #monsterActions = [5, 35, 100], [10, 5, 2], [75, 60, 30], [-10, 0, 5], ["powerful attack!", "strong attack.", "fast attack."]
     actionSelect = r.randrange(100)
     idx, monsterAttack = 0, 0
 
-    for idx, actionRate in enumerate(monsterActions[0]):
+    for idx, actionRate in enumerate(baddie.atkRate):
         if actionSelect <= actionRate:
-            monsterAttack = idx
+            baddie.atk = idx
             break
 
-    g.setText(label3=f"The monster is making a {monsterActions[4][idx]}")
+    g.setText(label4=f"The monster is making a {baddie.atkDesc[idx]} attack.")
     g.gwin.button0["text"] = "Continue"
     g.gwin.update()
-    baddie.TIBS = monsterActions[2][idx]
+    baddie.TIBS = baddie.atkTIBS[idx]
     g.gwin.button0["command"] = lambda: tickUntilTurn()
 
     return baddie.TIBS, monsterAttack
 
-
 def tickUntilTurn():
     global gwin
 
+    g.clearText([8])
+
     if pe.me.retreating:
-        g.setText(text2="You are running away.")
+        g.setText(label2="You are running away.")
+    if pe.me.dodging:
+        g.setText(label2="You are dodging.")
+    if pe.me.blocking:
+        g.setText(label2="You are blocking.")
 
     while pe.me.TIBS > 0 and baddie.TIBS > 0:
+        g.updateStatus()
         tempSpeedMod = 0
-        poisonDamage = 0
 
         Ticker = "..................................................................................................."
 
-        # todo re-add
-        # for each in monsterStatus:
-        #    if each.statusEffect.effect == "speed":
-        #        tempSpeedMod += each.statusEffect.effectValue
+        for each in baddie.status:
+           if each.effect == "slow":
+               tempSpeedMod += each.effectValue
+        #todo combine both status checks
 
-        pe.me.TIBS -= pe.me.speed
-        baddie.TIBS -= int(baddie.speed) + tempSpeedMod
+        modSpeed = max(1, int(baddie.speed) + tempSpeedMod)
+
+        pe.me.TIBS -= (pe.me.speed + pe.me.equippedWeapon.secondaryEffectValue)
+
+        if 'stop' not in [o.effect for o in baddie.status]:
+            baddie.TIBS -= modSpeed
 
         pe.me.TIBS = max(0, pe.me.TIBS)
         baddie.TIBS = max(0, baddie.TIBS)
@@ -87,32 +109,38 @@ def tickUntilTurn():
 
         g.gwin.TIBSlabel["text"] = Ticker
 
-        g.setText(label4=baddie.name, label5=baddie.currentHP)
+        g.setText(label5=baddie.name + ": " + str(baddie.currentHP))
         g.gwin.update()
 
-        # todo re-add
-        # for idx, val in enumerate(monsterStatus):
-        #    print(val.statusEffect.name, val.duration)
+        if len(baddie.status) == 0:
+            g.setText(label6="")
+        else:
+            for eff in baddie.status:
+                # todo re-add
+                if eff.effect == "poison":
+                    eff.timedEffect -= 1
+                    if eff.timedEffect <= 0:
+                        eff.timedEffect = eff.secondaryValue
+                        damageBaddie(eff.effectValue)
+                        g.setText(label8=f"The monster takes {eff.effectValue} damage from poison")
 
-        # for each in monsterStatus:
-        #    if each.statusEffect.effect == "poison":
-        #        if r.randrange(100) < each.statusEffect.secondaryValue:
-        #            poisonDamage += r.randrange(int(each.statusEffect.effectValue / 2), each.statusEffect.effectValue)
-
-        #   each.duration -= 1
-        #    if each.duration < 0:
-        #        monsterStatus.remove(each)
-
-        # if poisonDamage >= 1:
-        #    print(f"The monster takes {poisonDamage} damage from poison")
+                eff.duration -= 1
+                if eff.duration <= 0:
+                    baddie.status.remove(eff)
+            g.setAllText(6, [o.name + str(o.duration) for o in baddie.status])
 
         t.sleep(.1)
+
+    if int(baddie.currentHP) <= 0:
+        killedTheMonster(baddie)
 
     if baddie.TIBS <= 0:
         baddie.TIBS, monsterAction = monsterTurn()
     elif pe.me.TIBS <= 0:
-        playerTurn()
-
+        if pe.me.blocking or pe.me.dodging:
+            playerTurn()
+        else:
+            attack()
 
 def tickUntilStatusClear(monsterStatus):
     poisonDamage = 0
@@ -133,216 +161,101 @@ def tickUntilStatusClear(monsterStatus):
     if poisonDamage >= 1:
         print(f"The monster takes {poisonDamage} damage from poison")
 
-
 def monsterTurn():
-    monsterDodge = 10
-    monsterAttackSkill = 15
-    monsterStrength = 5
-    monsterSpeed = 3
-    monsterActions = [5, 35, 100], [10, 5, 2], [75, 60, 30], [-10, 0, 5], ["powerful attack!", "strong attack.",
-                                                                           "fast attack."]
-    monsterAttack = 0
+    atk = baddie.atk
 
-    dodgeChance = pe.me.skills.Dodge - int(pe.me.equippedArmor.secondaryEffectValue) + monsterAttackSkill
+    if pe.me.dodging:
+        dodging = int(pe.me.skills.Dodge/2)
+    else:
+        dodging = 0
 
-    hit = r.randrange(100) + monsterActions[3][monsterAttack]
-    damage = r.randrange(monsterActions[1][monsterAttack]) + monsterStrength - \
-             int(pe.me.equippedArmor.baseEffectValue)
+    if pe.me.blocking:
+        blocking = 2 + 2*pe.me.equippedShield.baseEffectValue
+    else:
+        blocking = 0
+
+    #todo blocking skill
+
+    dodgeChance = pe.me.skills.Dodge - int(pe.me.equippedArmor.secondaryEffectValue) + dodging
+    hit = r.randrange(100) + baddie.atkMod[atk]
+
+    blockedDamage = int(pe.me.equippedArmor.baseEffectValue) - pe.me.equippedShield.baseEffectValue - blocking
+    damage = r.randrange(baddie.atkStr[atk]) + baddie.strength - blockedDamage
+
+    g.setText(label1="The monster attacks!")
 
     if hit >= dodgeChance:
         if damage <= 0:
-            g.setText(label1="You block all damage")
+            g.setText(label2="You block all damage")
         elif damage > 0:
-            g.setText(label1=f"you take {damage}")
-            if r.randrange(100) >= pe.me.skills.Dodge:
+            g.setText(label2=f"you take {damage}")
+            g.updateStatus()
+            pe.me.currentHP -= damage
+
+            #g.gwin.HPLabel["text"]=f"HP: {pe.me.currentHP}/{pe.me.maxHP}"
+            if pe.me.currentHP <= 0:
+                playerDied()
+            elif r.randrange(100) >= pe.me.skills.Dodge:
                 pe.me.skills.Dodge += 1
-                g.setText(label2=f"Your Dodge skill increases to {pe.me.skills.Dodge}!")
+                g.setText(label3=f"Your Dodge skill increases to {pe.me.skills.Dodge}!")
 
     else:
-        g.setText(label1="You dodge")
+        g.setText(label2="You dodge")
 
     g.gwin.button0["text"] = "Continue"
     g.gwin.button0["command"] = lambda: readyMonsterAttack()
     g.gwin.update()
 
-    return monsterActions[2][monsterAttack], monsterAttack
-
+    return baddie.atkTIBS[atk], atk
 
 def playerTurn():
     global baddie
 
-    attackType = "Q"
+    pe.me.blocking = False
+    pe.me.dodging = False
 
     if pe.me.retreating:
-        g.setText(label1="You escape.", label2="ccc")
-        tickUntilStatusClear(baddie)
-        # break
-        # todo
+        pe.me.retreating = False
+        g.setText(label1="You escape.")
+        g.gwin.button0["text"] = "Return to Town"
+        g.gwin.button0["command"] = lambda:g.dispTown()
+        #todo re-add tickUntilStatusClear(baddie)
+    else:
+        g.setText(label7="Choose your action")
 
-    g.setText(label1="Choose your action")
+        if pe.me.attackType == "Q":
+            g.gwin.button0["text"] = "Quick Attack"
+        elif pe.me.attackType == "S":
+            g.gwin.button0["text"] = "Strong Attack"
+        elif pe.me.attackType == "N":
+            g.gwin.button0["text"] = "Normal Attack"
+        elif pe.me.attackType == "A":
+            g.gwin.button0["text"] = "Accurate Attack"
+        g.gwin.button0["command"] = lambda: readyPlayerAttack()
 
-    if attackType == "Q":
-        g.gwin.button0["text"] = "Quick Attack"
-    elif attackType == "S":
-        g.gwin.button0["text"] = "Strong Attack"
-    elif attackType == "D":
-        g.gwin.button0["text"] = "Double Strike"
-    g.gwin.button0["command"] = lambda: attack()
-
-    # todo
-    g.gwin.button1["text"] = "Defend"
-    # gwin.button1["command"] = lambda : defend()
-    g.gwin.button2["text"] = "Items"
-    # gwin.button2["command"] = lambda : items()
-    g.gwin.button3["text"] = "Tactics"
-    g.gwin.button3["command"] = lambda: tactics()
-
-
-def combat(gui, ePID):
-    global monsterStatus
-    global monsterSpeed
-    global gwin
-
-    gwin = gui
-    # turn = "x"
-
-    attackType = 'Q'
-    runFlag = 0
-
-    monsterStatus = []
-    #    eTIBS = 0
-
-    #    equippedWeapon = spear
-    #    equippedArmor = leatherArmor
-    #    inv = [healingElixer, icyLongSword, fireyLongSword, poisonPotion]
-    #    setattr(skills, "Dodging", 0)
-    # ---------------------------------------------------------------------------------------------------------
-
-    readyMonsterAttack(monsterAttacks)
-    #    TIBS = 30
-
-    # try:
-    #    attackSkill = getattr(skills, equippedWeapon.name)
-    # except:
-    #    setattr(skills, equippedWeapon.name, 0)
-    #    attackSkill = getattr(skills, equippedWeapon.name)
-
-    # hitChance = attackSkill + equippedWeapon.secondaryEffectValue - monsterDodge
-
-    defense = equippedArmor.baseEffectValue
-
-    # while 1:
-    # while turn == "x":
-    #    turn, TIBS, eTIBS = tick(monsterStatus,monsterSpeed,TIBSSpeed,TIBS,eTIBS)
-    #    updateTicker(gwin,TIBS,eTIBS)
-
-    turn = tickUntilTurn()
-    # gwin.update()
-    # print("\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n\n")
-
-    if turn == "P" or turn == "B":
-
-        try:
-            attackSkill = getattr(skills, equippedWeapon.name)
-        except:
-            setattr(skills, equippedWeapon.name, 0)
-            attackSkill = getattr(skills, equippedWeapon.name)
-
-        hitChance = attackSkill + equippedWeapon.secondaryEffectValue - monsterDodge
-        dodgeChance = skills.Dodging - equippedArmor.secondaryEffectValue + monsterAttackSkill
-        defense = equippedArmor.baseEffectValue
-
-        if attackType == "Q":
-            gwin.button0["text"] = "Quick Attack"
-        elif attackType == "S":
-            gwin.button0["text"] = "Strong Attack"
-        elif attackType == "D":
-            gwin.button0["text"] = "Double Strike"
-        TIBS = gwin.button0["command"] = lambda: attack(attackType, equippedWeapon)
-
-        # print("2:Dodge\n3:Block\n4:Retreat\n5:Choose Attack Type\n6: Items")
-        gwin.button1["text"] = "Defend"
-        gwin.button2["text"] = "Items"
-        gwin.button3["text"] = "Tactics"
-
-        gwin.mainloop()
-        # do = int(input("\n"))
-        """
-        if do == 4:
-            TIBS = 100
-            runFlag = 1
-        if do == 5:
-            attackType = input("QSD")
-        if do == 2:
-            dodgeChance += 50
-            TIBS = 30
-        if do == 3:
-            defense *= 2
-            TIBS = 30
-        if do == 1:
-            damage = 0
-            if r.randrange(100) <= hitChance:
-                damage += r.randrange(int(equippedWeapon.baseEffectValue / 2), equippedWeapon.baseEffectValue)
-                if attackType == "S":
-                    damage += strength
-                print(f"You deal {damage}")
-
-                if equippedWeapon.specialEffect == "Icy":
-                    if r.randrange(100) <= 33:
-                        monsterStatus.append(activeStatus(slow, 10))
-                if equippedWeapon.specialEffect == "Firey":
-                    if r.randrange(100) <= 40:
-                        temp = equippedWeapon.specialEffectValue
-                        print(f"You deal an additional {r.randrange(int(temp / 2), temp)} fire damage.")
-
-                if attackType == "Q":
-                    TIBS = 30
-                if attackType == "S":
-                    TIBS = 70
-            else:
-                print("You miss")
-                TIBS = 25
-                if attackType == "S":
-                    TIBS += 10
-                if r.randrange(100) >= getattr(skills, equippedWeapon.name):
-                    setattr(skills, equippedWeapon.name, getattr(skills, equippedWeapon.name) + 1)
-                    print(f"Your {equippedWeapon.name} skill increases to {getattr(skills, equippedWeapon.name)}!")
-
-                    # todo cap at 100
-            input()
-        if do == 6:
-            for idx, val in enumerate(inv):
-                print(idx, val.specialEffect, val.name)
-            select = int(input())
-
-            if inv[select].type == "consumable":
-                if inv[select].specialEffect == "Healing":
-                    effect = r.randrange(int(inv[select].specialEffectValue / 2), inv[select].specialEffectValue)
-                    print("you heal", effect)
-                    input()
-            if inv[select].specialEffect == "Poison":
-                monsterStatus.append(activeStatus(lightPoison, 10))
-
-            elif inv[select].type == "weapon":
-                equippedWeapon = inv[select]
-            elif inv[select].type == "armor":
-                equippedArmor = inv[select]
-        """
-
+        g.gwin.button1["text"] = "Defend"
+        g.gwin.button1["command"] = lambda : defend()
+        g.gwin.button2["text"] = "Items"
+        g.gwin.button2["command"] = lambda : g.initSelect('combat use:', pe.me, 'inv', 'name', 'use', 'combat')
+        g.gwin.button3["text"] = "Tactics"
+        g.gwin.button3["command"] = lambda: tactics()
 
 def setupAttackType():
     g.gwin.button0["text"] = "Quick Attack"
-    g.gwin.button0["command"] = pe.me.attackType = "Q"
+    g.gwin.button0["command"] = lambda:setAttackType("Q")
 
-    g.gwin.button1["text"] = "Strong Attack"
-    g.gwin.button1["command"] = pe.me.attackType = "S"
-    # todo
+    g.gwin.button1["text"] = "Normal Attack"
+    g.gwin.button1["command"] = lambda:setAttackType("N")
 
+    g.gwin.button2["text"] = "Strong Attack"
+    g.gwin.button2["command"] = lambda:setAttackType("S")
 
-def setAttackType(atkType):
-    pe.me.attackType = atkType
-    tickUntilTurn()
+    g.gwin.button3["text"] = "Accurate Attack"
+    g.gwin.button3["command"] = lambda:setAttackType("A")
 
+def setAttackType(aT):
+    pe.me.attackType = aT
+    playerTurn()
 
 def attack():
     # todo put this at top of every func becuase double clicking can double attack
@@ -356,46 +269,83 @@ def attack():
         setattr(pe.me.skills, eqWep.itemType, 0)
         attackSkill = getattr(pe.me.skills, eqWep.itemType)
 
-    hitChance = attackSkill + eqWep.secondaryEffectValue  # - monsterDodge #todo
+    if pe.me.attackType == "A":
+        attackBonus = 20
+    else:
+        attackBonus = 0
+
+    hitChance = attackSkill + eqWep.secondaryEffectValue + attackBonus # - monsterDodge #todo
 
     damage = 0
+
+    g.setText(label1="You attack!")
+
     if r.randrange(100) <= hitChance:
-        damage += r.randrange(int(eqWep.baseEffectValue / 2), eqWep.baseEffectValue)
+        damage = r.randrange(int(eqWep.baseEffectValue / 2), eqWep.baseEffectValue) + pe.me.strength
         if pe.me.attackType == "S":
             damage += pe.me.strength
+        if pe.me.attackType == "Q":
+            damage -= pe.me.strength
         g.setText(label2=f"You deal {damage}")
-        baddie.currentHP -= damage
-        baddie.currentHP = max(0, baddie.currentHP)
-        ti.createEvent(ti.now(), pe.me.name, 'wounds', baddie, pe.me.location, extra=damage)
+        damageBaddie(damage)
+
+        if eqWep.magicEffect == "Freezing":
+            if r.randrange(100) <= eqWep.magicEffectValue:
+                baddie.status.append(statusEffect("Held", 'stop', 0, 0, 30))
+
+        if eqWep.magicEffect == "Icy":
+            if r.randrange(100) <= 100:
+                baddie.status.append(statusEffect("Slow", 'speed', -3, 20, 10))
         """
-        if equippedWeapon.specialEffect == "Icy":
-            if r.randrange(100) <= 33:
-                monsterStatus.append(activeStatus(slow, 10))
         if equippedWeapon.specialEffect == "Firey":
             if r.randrange(100) <= 40:
                 temp = equippedWeapon.specialEffectValue
                 print(f"You deal an additional {r.randrange(int(temp / 2), temp)} fire damage.")
         """
-        if pe.me.attackType == "Q":
-            pe.me.TIBS = 30
-        if pe.me.attackType == "S":
-            pe.me.TIBS = 70
+        #if pe.me.attackType == "Q":
+        #    pe.me.TIBS = 30
+        #if pe.me.attackType == "S":
+        #    pe.me.TIBS = 70
     else:
         g.setText(label1="You miss")
-        pe.me.TIBS = 25
-        if pe.me.attackType == "S":
-            pe.me.TIBS += 10
+        #pe.me.TIBS = 25
+        #if pe.me.attackType == "S":
+        #    pe.me.TIBS += 10
         if r.randrange(100) >= getattr(pe.me.skills, eqWep.itemType):
             setattr(pe.me.skills, eqWep.itemType, getattr(pe.me.skills, eqWep.itemType) + 1)
             g.setText(label2=f"Your {eqWep.itemType} skill increases to {getattr(pe.me.skills, eqWep.itemType)}!")
 
             # todo cap at 100
+
     if int(baddie.currentHP) > 0:
-        g.gwin.button0["text"] = "Continue"
-        g.gwin.button0["command"] = lambda: tickUntilTurn()
+        playerTurn()
     elif int(baddie.currentHP) == 0:
         killedTheMonster(baddie)
 
+def damageBaddie(damage):
+    baddie.currentHP -= damage
+    baddie.currentHP = max(0, baddie.currentHP)
+    ti.createEvent(ti.now(), pe.me.name, 'wounds', baddie, pe.me.location, extra=damage)
+
+def defend():
+    g.gwin.button0["text"] = "Dodge"
+    g.gwin.button0["command"] = lambda:dodge()
+
+    g.gwin.button1["text"] = "Block"
+    g.gwin.button1["command"] = lambda:block()
+
+    g.gwin.button2["text"] = "Return"
+    g.gwin.button2["command"] = lambda:playerTurn()
+
+def dodge():
+    pe.me.dodging = True
+    pe.me.TIBS = 30
+    tickUntilTurn()
+
+def block():
+    pe.me.blocking = True
+    pe.me.TIBS = 30
+    tickUntilTurn()
 
 def tactics():
     g.gwin.button0["text"] = "Attack Type"
@@ -410,21 +360,49 @@ def tactics():
     g.gwin.button3["text"] = "Return"
     g.gwin.button3["command"] = lambda: playerTurn()
 
-
 def retreat():
     pe.me.retreating = True
     pe.me.TIBS = 99
     tickUntilTurn()
 
-
 def killedTheMonster(badd):
+    #todo clear Ticker
     display = f"You killed the {badd.name}!"
-    g.gwin.label0["text"] = display
+    ti.createEvent(ti.now(),pe.me.name, 'kills',badd, pe.me.location)
+    g.setText(label3=display)
+
     g.gwin.button0["text"] = "Loot"
-    # tempinv = badd.inv
-    # badd.inv=[]
+    g.gwin.button0["command"] = lambda: g.initSelect(display, baddie, "inv", "itemType", 'loot', 'dispTown')
 
-    # for i in tempinv:
-    #    badd.inv.append(it.createItem(i))
+    g.gwin.button1['text'] = 'Dissect'
+    g.gwin.button1['command'] = lambda:dissect(badd)
 
-    g.gwin.button0["command"] = lambda: g.initSelect(display, baddie, "inv", "itemType", 'loot', 'dispTown')  # todo
+def playerDied():
+        g.clearText()
+        g.setText(label4="You died!")
+
+        if os.path.exists("player.kr"):
+            os.remove("player.kr")
+        
+        g.gwin.button0["text"] = "Start New"
+        g.gwin.button0["command"] = "" #todo
+        g.gwin.button1["text"] = "Quit"
+        g.gwin.button1["command"] = lambda:g.quitGame()
+        #todo delete player.kr
+
+def dissect(baddy):
+    import items as it
+
+    for each in baddy.addInv:
+        testrand = r.randrange(100)
+        if pe.skillCheck('Dissection', each.harvestDifficulty):
+            baddy.inv.append(each)
+            baddy.addInv.remove(each)
+            print(f'add {each.name}')
+            ti.timePasses(each.harvestTime)
+        else:
+            print(f'destroyed {each.name}')
+            baddy.addInv.remove(each)
+            temptime = int(each.harvestTime/2)
+            if temptime > 0:
+                ti.timePasses(temptime)

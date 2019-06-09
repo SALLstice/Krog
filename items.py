@@ -70,6 +70,9 @@ def initItemTypeList():
             # itemTypeList.append(itemType(*headers))
             itemTypeList.append(itemType(row))
             for val, attr in enumerate(ITEM_HEADERS):
+                if type(attr) == str:
+                    attr = attr.strip()
+
                 try:
                     tempval = int(row[val])
                 except:
@@ -79,7 +82,7 @@ def initItemTypeList():
                     elif attr in ['craftMats']:
                         tempval = eval(row[val])
                     else:
-                        tempval = row[val]
+                        tempval = row[val].strip()
 
                 setattr(itemTypeList[len(itemTypeList) - 1], attr, tempval)
 

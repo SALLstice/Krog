@@ -92,6 +92,9 @@ def initPersonTypeList():
         for row in reader:
             personTypeList.append(personType(*PERSON_HEADERS))
             for val, attr in enumerate(PERSON_HEADERS):
+                if type(attr) == str:
+                    attr = attr.strip()
+
                 try:
                     tempval = int(row[val])
                 except:
@@ -101,7 +104,7 @@ def initPersonTypeList():
                     elif attr == "atkDesc":
                         tempval = row[val].split()
                     else:
-                        tempval = row[val]
+                        tempval = row[val].strip()
 
                 setattr(personTypeList[len(personTypeList) - 1], attr, tempval)
 

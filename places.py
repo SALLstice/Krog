@@ -47,15 +47,19 @@ def initPlaceTypeList():
         headers = next(reader)
         for row in reader:
             placeTypeList.append(placeType(*headers))
-            for val, attr in enumerate(headers):
+            for idx, attr in enumerate(headers):
+                if type(attr) == str:
+                    attr = attr.strip()
+
+
                 try:
-                    tempval = int(row[val])
+                    tempval = int(row[idx])
                 except:
                     if attr in ["inv", "recipes"]:
-                        tempval = row[val].split()
+                        tempval = row[idx].split()
                         tempval = [int(x) for x in tempval]
                     else:
-                        tempval = row[val]
+                        tempval = row[idx].strip()
 
                 setattr(placeTypeList[len(placeTypeList) - 1], attr, tempval)
 
@@ -93,7 +97,6 @@ def findTID(inplT):
     return plTID
 
 def arrive():
-    #todo re-add
     g.updateStatus()
 
     if pe.kingKrog.location == pe.me.location:
@@ -120,7 +123,7 @@ def visitRegionPlace():  #todo split lodInfo into branch options, shop, rumors, 
     display = f"You are in {pe.me.location}."
     g.initSelect(display, regSites, "", 'type', 'site', 'town')
 
-    #siteActivity(places[w.world.nodes[loc]['sites'][whereGo]])  #todo can go to hidden sites before finding them
+    # siteActivity(places[w.world.nodes[loc]['sites'][whereGo]])
 
 def siteActivity(store):
     #Shops

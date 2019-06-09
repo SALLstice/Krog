@@ -1,13 +1,15 @@
 import csv
+import pickle as p
+import random as r
+
 import gui as g
 import items as it
 import worlds as w
-import pickle as p
-import random as r
 
 persons = []
 personTypeList = []
 futureDead = []
+PERSON_HEADERS = []
 
 class skills:
     def __init__(self):
@@ -18,15 +20,25 @@ class magic:
         pass
 
 class person:
-    def __init__(self, entityID, perT, name, currentHP, status, location):
+    def __init__(self, entityID, perT, name, currentHP, status, location, homeLocation):
         self.entityID = entityID
         self.personType = perT
         self.name = name
         self.currentHP = currentHP
         self.status = status
         self.location = location
+        # self.busy = False
+        self.job = None
+        self.wallet = 0
+        self.employed = None
+        self.homeLocation = homeLocation
 
 class personType:
+    def __init__(self, *args, **kwargs):
+        for each in PERSON_HEADERS:
+            setattr(self, each, args)
+
+    """
     def __init__(self, personType, inv, strength, maxHP, defense, dodge, speed, event, eventTimer, atkRate, atkStr, atkTIBS, atkMod, atkDesc, addInv):
         self.personType = personType
         self.inv = inv
@@ -43,7 +55,7 @@ class personType:
         self.atkMod = atkMod
         self.atkDesc = atkDesc
         self.addInv = addInv
-
+    """
 class dead:
     def __init__(self, entityID, personType, name, inv, deathDate, deathLocation):
         self.entityID = entityID
@@ -70,25 +82,28 @@ class player:
         self.skills = skills
         self.magic = magic
 
-with open('personList.csv') as f:
-    reader = csv.reader(f)
-    headers = next(reader)
-    for row in reader:
-        personTypeList.append(personType(*headers))
-        for val, attr in enumerate(headers):
-            try:
-                tempval = int(row[val])
-            except:
-                if attr in ["inv", "atkRate", "atkStr", "atkTIBS", "atkMod", "addInv"]:
-                    tempval = row[val].split()
-                    tempval = [int(x) for x in tempval]
-                elif attr == "atkDesc":
-                    tempval = row[val].split()
-                else:
-                    tempval = row[val]
 
-            setattr(personTypeList[len(personTypeList) - 1], attr, tempval)
-    f.close()
+def initPersonTypeList():
+    global PERSON_HEADERS
+
+    with open('personList.csv') as f:
+        reader = csv.reader(f)
+        PERSON_HEADERS = next(reader)
+        for row in reader:
+            personTypeList.append(personType(*PERSON_HEADERS))
+            for val, attr in enumerate(PERSON_HEADERS):
+                try:
+                    tempval = int(row[val])
+                except:
+                    if attr in ["inv", "atkRate", "atkStr", "atkTIBS", "atkMod", "addInv"]:
+                        tempval2 = row[val].split()
+                        tempval = [int(x) for x in tempval2]
+                    elif attr == "atkDesc":
+                        tempval = row[val].split()
+                    else:
+                        tempval = row[val]
+
+                setattr(personTypeList[len(personTypeList) - 1], attr, tempval)
 
 def createPlayer(race, loc):
     global me  # todo give player skills which grow as they use the skill more often
@@ -165,7 +180,8 @@ def findBoss():
         if baddie.name == 'King Krog':
             kingKrog = baddie
 
-def createPerson(pTID, number=1, name='null', currentHP=-500, location=-1):
+
+def createPerson(pTID, number=1, name='null', currentHP=-500, location=-1, homeLocation=-1):
     multiAdd = []
     for i in range(number):
         inv = []
@@ -174,12 +190,19 @@ def createPerson(pTID, number=1, name='null', currentHP=-500, location=-1):
             currentHP = personTypeList[pTID].maxHP
 
         if name == 'null':  #if the person has no name (like a krog), make the name the person type
-            name = personTypeList[pTID].personType
+            setname = personTypeList[pTID].personType
+        elif name == 'rand':
+            setname = w.randomName('city')  # todo update to peopel names
+        else:
+            setname = name
 
-        persons.append(person(int(len(persons)), personTypeList[pTID], name, currentHP, 0, location))
+        persons.append(person(int(len(persons)), personTypeList[pTID], setname, currentHP, 0, location, homeLocation))
         for val, attr in enumerate(list(personTypeList[0].__dict__.keys())):
             inv = []
-            if attr == "inv" or attr == "addInv":
+            if attr == 'busy':
+                setattr(persons[len(persons) - 1], attr, False)
+
+            elif attr == "inv" or attr == "addInv":
 
                 invList = getattr(personTypeList[pTID], attr)
                 if invList != 0:
@@ -233,6 +256,9 @@ def nameDebugCheck(name):
 
     if name == "Hunter":
         setattr(me.skills,"Dissection", 50)
+
+    if name == 'Richboi':
+        me.money = 10000000
 
 def savePlayer():
     with open(r"player.kr", "wb") as play:

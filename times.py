@@ -45,7 +45,7 @@ def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungr
         timePassed *= (24 * 28 * 12)
 
     for i in range(timePassed):
-
+        w.runWorld(1)
         w.world.graph['hour'] += 1  # time advances 1 hour at a time
 
         for events in history:  # check history for any events which have to occur now

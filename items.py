@@ -1,11 +1,13 @@
 import csv
 import random as r
-import places as pl
+
 import gui as g
-import people as pe
 import newCombat as c
+import people as pe
+import places as pl
 
 itemTypeList = []
+mat = 0
 items = []
 ITEM_HEADERS = []
 
@@ -38,6 +40,25 @@ class itemType:
     """
 
 
+def initMaterials():
+    with open('materials.csv') as mib:
+        reader = csv.reader(mib)
+        matHeaders = next(reader)
+
+        for row in reader:
+            # materialList.append(itemType(row))
+            for val, attr in enumerate(matHeaders):
+                try:
+                    tempval = int(row[val])
+                except:
+                    if attr in ["recipe", "craftMats"]:
+                        tempval = eval(row[val])
+                        # tempval = [int(x) for x in tempval]
+                    else:
+                        tempval = row[val]
+
+                # setattr(materialList[len(materialList) - 1], attr, tempval)
+
 def initItemTypeList():
     global ITEM_HEADERS
 
@@ -53,14 +74,26 @@ def initItemTypeList():
                     tempval = int(row[val])
                 except:
                     if attr in ["recipe"]:
-                        tempval = row[val].split()
-                        tempval = [int(x) for x in tempval]
+                        tempval2 = row[val].split()
+                        tempval = [int(x) for x in tempval2]
+                    elif attr in ['craftMats']:
+                        tempval = eval(row[val])
                     else:
                         tempval = row[val]
 
                 setattr(itemTypeList[len(itemTypeList) - 1], attr, tempval)
 
-#generates items List
+
+def ref(iTID):
+    if type(iTID) == str:
+        for idx, iT in enumerate(itemTypeList):
+            if iTID == iT.itemType:
+                iTID = idx
+                break
+
+    return itemTypeList[iTID]
+
+
 def createItem(iTID, **kwargs):
 
     if type(iTID) == str:
@@ -71,10 +104,9 @@ def createItem(iTID, **kwargs):
 
     if iTID != 0:
         items.append(item(iTID))
+        setattr(items[len(items) - 1], 'itemEntityID', len(items) - 1)
         for val, attr in enumerate(list(itemTypeList[0].__dict__.keys())):
             temp1 = items[len(items) - 1]
-            if type(iTID)==str:
-                print("d")
             temp2 = itemTypeList[iTID]
             setattr(temp1, attr, getattr(temp2, attr))
         for inputAttr in kwargs.keys():
@@ -107,12 +139,17 @@ def displayItems(store):
     g.initSelect(display, store, 'inv', ['name', 'cost'], 'buy', 'town')
 
 def buyItem(store, selection):
-    if pe.me.money >= store.inv[selection - 1].cost:
-        pe.me.money -= store.inv[selection - 1].cost
-        pe.me.inv.append(store.inv.pop(selection - 1))
-    else:
+    if pe.me.money >= store.stocks[selection - 1].item.cost and len(store.stocks[selection - 1].entities) >= 1:
+        pe.me.money -= store.stocks[selection - 1].item.cost
+        pe.me.inv.append(store.stocks[selection - 1].entities.pop(0))
+    elif pe.me.money < store.stocks[selection - 1].item.cost:
         g.clearText()
         g.setText(label4="You can't afford it.")
+        g.gwin.button0["text"] = "Return"
+        g.gwin.button0["command"] = pl.arrive()
+    elif len(store.stocks[selection - 1].entities) <= 0:
+        g.clearText()
+        g.setText(label4="Out of stock.")
         g.gwin.button0["text"] = "Return"
         g.gwin.button0["command"] = pl.arrive()
 
@@ -142,7 +179,7 @@ def useItem(itemToUse, returnTo):
         pe.me.inv.append(pe.me.equippedWeapon)
         pe.me.equippedWeapon = itemToUse
         g.gwin.eqWeapL["text"] = f"Wea: {pe.me.equippedWeapon.name}"
-    elif itemToUse.type == "armor":
+    elif itemToUse.use == "armor":
         pe.me.inv.append(pe.me.equippedArmor)
         pe.me.equippedArmor = itemToUse
         g.gwin.eqArmL["text"] = f"Arm: {pe.me.equippedArmor.name}"

@@ -1,19 +1,20 @@
 import csv
-import math as m
 import random as r
-import networkx as nx
 import time
+
+import networkx as nx
+
+import events as ev
 import gui as g
 import items as it
 import newCombat as c
 import people as pe
 import times as t
 import worlds as w
-import events as ev
 
 placeTypeList = []
 places = []
-#exploring = 0
+PLACE_HEADERS = []
 
 class place:
     def __init__(self, name, currentHP):
@@ -21,6 +22,11 @@ class place:
         self.currentHP = currentHP
 
 class placeType:
+    def __init__(self, *args, **kwargs):
+        for each in PLACE_HEADERS:
+            setattr(self, each, args)
+
+    '''
     def __init__(self, type, use, area, known, inv, maxHP, extraSiteOption, recipes):
         self.type = type
         self.use = use
@@ -30,27 +36,34 @@ class placeType:
         self.maxHP = maxHP
         self.extraSiteOption = extraSiteOption
         self.recipes = recipes
+    '''
 
-with open('placeList.csv') as f:
-    reader = csv.reader(f)
-    headers = next(reader)
-    for row in reader:
-        placeTypeList.append(placeType(*headers))
-        for val, attr in enumerate(headers):
-            try:
-                tempval = int(row[val])
-            except:
-                if attr in ["inv", "recipes"]:
-                    tempval = row[val].split()
-                    tempval = [int(x) for x in tempval]
-                else:
-                    tempval = row[val]
 
-            setattr(placeTypeList[len(placeTypeList) - 1], attr, tempval)
-    f.close()
+def initPlaceTypeList():
+    global PLACE_HEADERS
+
+    with open('placeList.csv') as f:
+        reader = csv.reader(f)
+        headers = next(reader)
+        for row in reader:
+            placeTypeList.append(placeType(*headers))
+            for val, attr in enumerate(headers):
+                try:
+                    tempval = int(row[val])
+                except:
+                    if attr in ["inv", "recipes"]:
+                        tempval = row[val].split()
+                        tempval = [int(x) for x in tempval]
+                    else:
+                        tempval = row[val]
+
+                setattr(placeTypeList[len(placeTypeList) - 1], attr, tempval)
 
 def createPlace(sTID, name="", currentHP=-500):  # todo gain ability to reverse lookup sites by location
     inv = []
+
+    if type(sTID) == str:
+        sTID = findTID(sTID)
 
     if currentHP == -500:
         currentHP = placeTypeList[sTID].maxHP
@@ -68,6 +81,16 @@ def createPlace(sTID, name="", currentHP=-500):  # todo gain ability to reverse 
             setattr(places[len(places) - 1], attr, getattr(placeTypeList[sTID], attr))
 
     return places[int(len(places) - 1)]
+
+
+def findTID(inplT):
+    if type(inplT) == str:
+        for idx, plT in enumerate(placeTypeList):
+            if inplT == plT.type:
+                plTID = idx
+                break
+
+    return plTID
 
 def arrive():
     #todo re-add

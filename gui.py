@@ -1,4 +1,5 @@
 import tkinter as tk
+
 import events as ev
 import items as it
 import people as pe
@@ -283,6 +284,10 @@ def initSelect(titleDisplay, holder, holderList, displayAttr, do, returnTo, sele
                 dispList.append(f"The road leading to {w.world.nodes[list(w.world.neighbors(loc))[j]]['name']}")
         holderList = list(w.world.neighbors(loc))
 
+    elif do == 'buy':
+        for each in holder.stocks:
+            dispList.append(f"{len(each.entities)}x {each.item.itemType} {each.item.cost}c")
+
     elif holderList == "":
         dispList = [getattr(o, displayAttr) for o in holder]
         #for attrs in displayAttr:
@@ -320,15 +325,16 @@ def select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, sele
     gwin.__dict__[selectlabel]["text"] = f"> {holdlabel}"
 
     gwin.button0["text"] = "^"
-    gwin.button0["command"] = lambda: up(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection,
-                                         sellTo)
+    gwin.button0.grid()
+    gwin.button0["command"] = lambda: up(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo)
+
     gwin.button2["text"] = "v"
-    gwin.button2["command"] = lambda: down(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection,
-                                           sellTo)
+    gwin.button2.grid()
+    gwin.button2["command"] = lambda: down(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo)
 
     gwin.button1["text"] = do
-    gwin.button1["command"] = lambda: selectItem(titleDisplay, dispList, holder, list, displayAttr, do, returnTo,
-                                                 selection, sellTo)
+    gwin.button1.grid()
+    gwin.button1["command"] = lambda: selectItem(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo)
 
 def down(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo):
     selectlabel = "label" + str(selection)
@@ -361,7 +367,8 @@ def selectItem(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, 
 
     if do == 'buy':
         it.buyItem(holder, selection)
-        initSelect(titleDisplay, holder, list, displayAttr, do, returnTo, selection=1)
+        # initSelect(titleDisplay, holder, list, displayAttr, do, returnTo, selection=1)
+        pl.arrive()
 
     if do == "sell":
         it.sellItem(sellTo, selection)

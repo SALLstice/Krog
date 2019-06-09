@@ -1,10 +1,13 @@
-type,use,area,known,inv,maxHP,extraSiteOption,recipes
-Nowhere,0,0,0,0,0,,
-Farmer's Market,store,town,1,9 9,5,,
-Weapon Shop,store,town,1,1 10,5,,
-Armor Shop,store,town,1,4 11 12,5,,
-Druid Circle,druid,wild,0,0,3,,
-Inn,inn,town,1,9 13,8,,
-Giant Hill,king,wild,0,0,0,,
-Alchemist,store,town,1,6 6 14,5,Brew,14 15
-Hunter Camp,hunter,wild,0,0,2,,
+idx,type           ,use    ,area,known,inv    ,maxHP,extraSiteOption,recipes,stocks,money,employees,economic
+0  ,Nowhere        ,0      ,0   ,0    ,0      ,0    ,               ,       ,      ,     ,         ,
+1  ,Farmer's Market,store  ,town,1    ,9 9    ,5    ,               ,       ,      ,     ,         ,
+2  ,Weapon Shop    ,store  ,town,1    ,1 10   ,5    ,               ,       ,      ,     ,         ,
+3  ,Armor Shop     ,store  ,town,1    ,4 11 12,5    ,               ,       ,      ,     ,         ,
+4  ,Druid Circle   ,druid  ,wild,0    ,0      ,3    ,               ,       ,      ,     ,         ,
+5  ,Inn            ,inn    ,town,1    ,9 13   ,8    ,               ,       ,      ,     ,         ,
+6  ,Giant Hill     ,king   ,wild,0    ,0      ,0    ,               ,       ,      ,     ,         ,
+7  ,Alchemist      ,store  ,town,1    ,6 6 14 ,5    ,Brew           ,14 15  ,      ,     ,         ,
+8  ,Hunter Camp    ,hunter ,wild,0    ,0      ,2    ,               ,       ,      ,     ,         ,
+9  ,Blacksmith     ,store  ,town,1    ,0      ,5    ,Forge          ,3 20   ,      ,     ,         ,
+10 ,Lumbermill     ,harvest,wild,1    ,0      ,5    ,               ,       ,      ,     ,         ,
+11 ,Mining Camp    ,harvest,wild,1    ,0      ,5    ,               ,       ,      ,     ,         ,

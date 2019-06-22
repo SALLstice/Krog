@@ -86,7 +86,6 @@ def createPlace(sTID, name="", currentHP=-500):  # todo gain ability to reverse 
 
     return places[int(len(places) - 1)]
 
-
 def findTID(inplT):
     if type(inplT) == str:
         for idx, plT in enumerate(placeTypeList):
@@ -149,6 +148,8 @@ def siteActivity(store):
         druid(store)
     elif store.use == "inn":
         inn(store)
+    elif store.use == 'witch':
+        witch(store)
 
     def siteExtra(store):
         if store.extraSiteOption == "Brew":
@@ -440,3 +441,7 @@ def inn(store):
             g.updateStatus()
 
             g.gwin.button0['command'] = lambda:arrive()
+
+
+def witch(store):
+    pass

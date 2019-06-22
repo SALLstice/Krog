@@ -65,9 +65,11 @@ def initItemTypeList():
     with open('itemList.csv') as fib:
         reader = csv.reader(fib)
         ITEM_HEADERS = next(reader)
+        ITEM_HEADERS = [i.strip() for i in ITEM_HEADERS]
 
         for row in reader:
             # itemTypeList.append(itemType(*headers))
+            row = [i.strip() for i in row]
             itemTypeList.append(itemType(row))
             for val, attr in enumerate(ITEM_HEADERS):
                 if type(attr) == str:

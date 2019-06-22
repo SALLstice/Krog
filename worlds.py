@@ -177,6 +177,14 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             setattr(tempsite, 'location', x)
             web.nodes[x]['sites'].append(tempsite)
 
+            tempsite = pl.createPlace('Enchanter')
+            setattr(tempsite, 'stocks', [])
+            setattr(tempsite, 'money', r.randrange(100, 300))
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'economic', False)
+            setattr(tempsite, 'location', x)
+            web.nodes[x]['sites'].append(tempsite)
+
         if x in range(1, 5):  # todo dynamically create stocks based on what items the shop could create, based on the items craftMats
             # todo increase prices at tradeposts
             # todo rename blacksmith to arms/armor shop, etc, since they dont craft anything
@@ -184,8 +192,17 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             setattr(tempsite, 'stocks', [stock(it.ref('Short Sword'), 0, 4, False, True, True),
                                          stock(it.ref('Plate Mail'), 0, 1, False, True, True),
                                          stock(it.ref('Dagger'), 0, 10, False, True, True),
-                                         stock(it.ref('Iron Ore'), 10, 20, True, False, False),
-                                         stock(it.ref('Wood'), 10, 20, True, False, False)])
+                                         stock(it.ref('Iron Ore'), 0, 20, True, False, False),
+                                         stock(it.ref('Wood'), 0, 20, True, False, False)])
+            setattr(tempsite, 'money', r.randrange(100, 300))
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'economic', True)
+            setattr(tempsite, 'location', x)
+            web.nodes[x]['sites'].append(tempsite)
+
+            tempsite = pl.createPlace('Woodworker')
+            setattr(tempsite, 'stocks', [stock(it.ref('Club'), 0, 4, False, True, True),
+                                         stock(it.ref('Wood'), 0, 20, True, False, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
             setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
             setattr(tempsite, 'economic', True)
@@ -230,6 +247,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
     #web.nodes[r.randrange(len(web.nodes))]['sites'].append(pl.createPlace(4, "Druid Circle"))
     createSiteAtRandomLoc(web, 4, 'Druid Circle')
     createSiteAtRandomLoc(web, 8, 'Hunter Camp')
+    createSiteAtRandomLoc(web, 13, 'Witch')
 
     # create Krog Hill in a random node
     web.nodes[r.randrange(len(web.nodes))]['monsters'].append(pl.createPlace(4))
@@ -375,7 +393,9 @@ def runWorld(hours):
                             if type(j.job) == harvest:  # todo have ites go into worker inv then move to store after inv limite reached
                                 stidx = findStockIndex(j.job.homeShop, j.job.item)
                                 for i in range(j.job.item.craftQuantity):
-                                    j.job.homeShop.stocks[stidx].entities.append(it.createItem(j.job.item.itemType))
+                                    tempHarvest = it.createItem(j.job.item.itemType)
+                                    setattr(tempHarvest, 'craftMatsSource', j.job.homeShop.location)
+                                    j.job.homeShop.stocks[stidx].entities.append(tempHarvest)
                                 if checkStockFull(j.job.homeShop, j.job.item):
                                     j.job.status = 'complete'
 

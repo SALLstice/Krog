@@ -1,5 +1,7 @@
-import gui as g
 import csv
+
+import gui as g
+import people as pe
 
 EVENT_HEADERS = []
 eventList = []
@@ -31,8 +33,9 @@ def runEvent(e):
 
 def eventResults(result):
     if result == "greed":
-        print("You feel greedy")
+        g.clearText()
+        g.setText(label4="You feel greedy")
 
-    if result == 'beggardivine':
+    elif result == 'beggardivine':
         if pe.me.money >= 1:
             pe.me.money -= 1

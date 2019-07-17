@@ -1,8 +1,11 @@
 import random as r
-
+import sys
 import gui as g
 import people as pe
 import worlds as w
+import items as it
+import weakref as wr
+import boss as b
 
 history = []
 
@@ -18,14 +21,16 @@ class notableEvent:
 
 
 def createCalendar(web):  # todo make seasons, randomize months and seasons, etc
-    web.graph['hour'] = 8
-    web.graph['startingDay'] = r.randrange(1, 28)
-    web.graph['startingMonth'] = r.randrange(1, 12)
-    web.graph['startingYear'] = r.randrange(100, 200)  # todo monster never heals. Keep throwing characters at it.
 
-    web.graph['day'] = web.graph['startingDay']
-    web.graph['month'] = web.graph['startingMonth']
-    web.graph['year'] = web.graph['startingYear']
+    setattr(web, 'hour', 8)
+    setattr(web, 'startingDay', r.randrange(1, 28))
+    setattr(web, 'startingMonth', r.randrange(1, 12))
+    setattr(web, 'startingYear', r.randrange(100, 200))
+
+    setattr(web, 'day', web.startingDay)
+    setattr(web, 'month', web.startingMonth)
+    setattr(web, 'year', web.startingYear)
+
     return web
 
 
@@ -46,11 +51,27 @@ def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungr
 
     for i in range(timePassed):
         w.runWorld(1)
-        w.world.graph['hour'] += 1  # time advances 1 hour at a time
+        w.world.hour += 1  # time advances 1 hour at a time
+        #pe.me.timeAwake += 1  #todo make this do something
+        #pe.me.hunger += 1
+
+
+        if b.kingKrog.sleepTimer >= 0:
+            b.kingKrog.sleepTimer -= 1
+        elif b.kingKrog.sleepTimer == 0:
+            b.awaken()
+
+        if b.kingKrog.travelling:
+            b.kingKrog.travelRemaining -= 1
+            if b.kingKrog.travelRemaining <= 0:
+                b.bossArrive()
+        else:
+            b.attackTown()
+
 
         for events in history:  # check history for any events which have to occur now
             if events.datetime == now():
-                doEvent(events)
+                doEvent(events)         #todo all of economics has no events
 
         for j in pe.persons:  # check each person entity if they have a time-based event
             if j.eventTimer == 0:
@@ -58,17 +79,71 @@ def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungr
                 # personEvent(j) todo re-add
             j.eventTimer = int(j.eventTimer) - 1
 
-        if w.world.graph['hour'] >= 24:
-            w.world.graph['hour'] -= 24
-            w.world.graph['day'] += 1
-        if w.world.graph['day'] >= 29:
-            w.world.graph['day'] -= 28
-            w.world.graph['month'] += 1
-        if w.world.graph['month'] >= 13:
-            w.world.graph['month'] -= 12
-            w.world.graph['year'] += 1
-    g.gwin.timeL['text'] = f"Time: {w.world.graph['hour']}:00"
-    g.gwin.dateL["text"] = f"Date: {w.world.graph['month']}/{w.world.graph['day']}/{w.world.graph['year']}"
+        if w.world.hour >= 24:
+            w.world.hour -= 24
+            w.world.day += 1
+            newDay()
+        if w.world.day >= 29:
+            w.world.day -= 28
+            w.world.month += 1
+            newMonth()
+        if w.world.month >= 13:
+            w.world.month -= 12
+            w.world.year += 1
+            newYear()
+
+    g.gwin.timeL['text'] = f"Time: {w.world.hour}:00"
+    g.gwin.dateL["text"] = f"Date: {w.world.month}/{w.world.day}/{w.world.year}"
+
+def newDay():
+    PAY_RATE = 2
+    wearRate = [0,1,2,3]
+
+    for n in w.world.nodes:
+        for s in w.world.nodes[n]['sites']:
+            pop = len(w.world.nodes[n]['population'])
+            if s.economic:
+                for e in s.employees:
+                    if s.money >= PAY_RATE:
+                        s.money -= PAY_RATE
+                        e.money += PAY_RATE
+                    else:
+                        #print("employee quits")
+                        s.employees.remove(e)
+                for i in s.stocks:
+                    if i.storeStock and len(i.entities) > 0:
+                        buyChance = max(1, int(100000 / i.item.cost * pop * 5) / 1000)
+                        if r.randrange(1,101) <= buyChance:
+                            buyer = w.world.nodes[n]['population'][0]
+                            if buyer.money >= i.item.cost:
+                                buyer.inv.append(i.entities.pop(0))
+                                buyer.money -= i.item.cost
+                                s.money += i.item.cost
+    '''
+    for i in it.items:
+        if i.wears:
+            i.wear += r.choice(wearRate)
+            if i.wear >= 40:
+                print("d")
+                #del i
+
+                #todo weak refs will fix this
+    '''
+def newMonth():
+    TAXES = 20
+
+    for n in w.world.nodes:
+        for s in w.world.nodes[n]['sites']:
+            if s.economic:
+                if s.area == 'town':
+                    if s.money >= TAXES:
+                        s.money -= TAXES
+                    else:
+                        #print("store closes")
+                        s.open = False
+
+def newYear():
+    pass
 
 def personEvent(pers):
     if pers.eventType == 'grow' and pers.currentHP >= 1:

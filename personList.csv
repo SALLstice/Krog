@@ -1,7 +1,7 @@
-personType     ,inv,strength,maxHP,defense,dodge,speed,event,eventTimer,atkRate ,atkStr ,atkTIBS ,atkMod  ,atkDesc              ,addInv     ,busy,job,wallet
-Nobody         ,0  ,0       ,0    ,0      ,0    ,0    ,     ,-1        ,        ,       ,        ,        ,                     ,           ,    ,   ,
-Baby Krog      ,0  ,1       ,4    ,0      ,4    ,2    ,grow ,45        ,5 35 100,4 2 1  ,75 50 30,-5 0 0  ,powerful strong fast ,6 7 7 7 7 8,    ,   ,
-Human          ,0  ,1       ,10   ,0      ,0    ,3    ,     ,-1        ,        ,       ,        ,        ,                     ,           ,    ,   ,
-Adolescent Krog,6  ,3       ,10   ,2      ,2    ,4    ,     ,-1        ,        ,       ,        ,        ,                     ,           ,    ,   ,
-King Krog      ,0  ,20      ,1000 ,20     ,60   ,3    ,     ,-1        ,5 35 100,15 10 5,80 70 55,20 20 20,powerful strong tough,           ,    ,   ,
-               ,   ,        ,     ,       ,     ,     ,     ,          ,        ,       ,        ,        ,                     ,           ,    ,   ,
+personType,inv,strength,maxHP,defense,dodge,speed,event,eventTimer,atkRate,atkStr,atkTIBS,atkMod,atkDesc,addInv,busy,job,money
+Nobody,0,0,0,0,0,0,,-1,,,,,,,,,
+Baby Krog,0,1,4,0,4,2,grow,45,5 35 100,4 2 1,75 50 30,-5 0 0,powerful strong fast,6 7 7 7 7 8,,,
+Human,0,1,10,0,0,3,,-1,,,,,,,,,
+Adolescent Krog,6,3,10,2,2,4,,-1,,,,,,,,,
+King Krog,0,20,1000,20,60,3,,-1,5 35 100,15 10 5,80 70 55,20 20 20,powerful strong tough,,,,
+,,,,,,,,,,,,,,,,,

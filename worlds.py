@@ -1,9 +1,7 @@
 import os
 import pickle as p
 import random as r
-
 import networkx as nx
-
 import items as it
 import people as pe
 import places as pl
@@ -21,9 +19,8 @@ class road:
         self.roughness = roughness
         self.travellers = travellers
 
-
 class stock:
-    def __init__(self, item, inStock, reqStock, buy, sell, craft, need='unknown', job=None):
+    def __init__(self, item, inStock, reqStock, buy, sell, craft, storeStock, need='unknown', job=None):
         self.item = item
         # self.inStock = inStock
         self.reqStock = reqStock
@@ -34,7 +31,7 @@ class stock:
         self.sell = sell
         self.craft = craft
         self.job = job
-
+        self.storeStock = storeStock
 
 class shoppingBag:
     def __init__(self, item, holding, wants):
@@ -43,9 +40,8 @@ class shoppingBag:
         self.wants = wants
         self.entities = []
 
-
 class craft:
-    def __init__(self, jobID, worker, homeShop, quantity, item, status):
+    def __init__(self, jobID, worker, homeShop, quantity, item, status, skill):
         self.jobID = jobID
         self.worker = worker
         self.homeShop = homeShop
@@ -55,22 +51,21 @@ class craft:
         self.item = item
         self.craftMatProgress = []
         self.craftMatsApplied = []
-
+        self.skill = skill
 
 class shoppingTrip:
-    def __init__(self, jobID, worker, homeShop, shop, distance, wallet, wagon, item, returning, status='inactive'):
+    def __init__(self, jobID, worker, homeShop, shop, distance, money, wagon, item, returning, status='inactive'):
         self.jobID = jobID
         self.worker = worker
         self.homeShop = homeShop
         self.shop = shop
         self.distance = distance
-        self.wallet = wallet
+        self.money = money
         self.wagon = wagon
         self.item = item
         # self.timeRemaining = 0
         self.returning = returning
         self.status = status
-
 
 class harvest:
     def __init__(self, jobID, worker, homeShop, item):
@@ -79,7 +74,6 @@ class harvest:
         self.homeShop = homeShop
         self.item = item
         self.status = 'inactive'
-
 
 def buildWorld(numCities, infestation):     #todo alternate worlds?
     global world
@@ -149,12 +143,15 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
         web.nodes[x]['sites'] = []
         web.nodes[x]['label'] = int(x)
         web.nodes[x]['population'] = pe.createPerson(2, 20, 'rand', location=x, homeLocation=x)
+        web.nodes[x]['ruined'] = False
 
         if x == 0:
+            web.nodes[x]['sites'].append(pl.createPlace("Homes"))
+
             tempsite = pl.createPlace('Weapon Shop')
-            setattr(tempsite, 'stocks', [stock(it.ref('Short Sword'), 0, 5, True, False, False),
-                                         stock(it.ref('Dagger'), 0, 10, True, False, False),
-                                         stock(it.ref('Club'), 0, 3, True, False, False)])
+            setattr(tempsite, 'stocks', [stock(it.ref('Short Sword'), 0, 5, True, False, False, True),
+                                         stock(it.ref('Dagger'), 0, 10, True, False, False, True),
+                                         stock(it.ref('Club'), 0, 3, True, False, False, True)])
             setattr(tempsite, 'money', r.randrange(1000, 3000))
             setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
             setattr(tempsite, 'economic', True)
@@ -162,7 +159,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             web.nodes[x]['sites'].append(tempsite)
 
             tempsite = pl.createPlace('Armor Shop')
-            setattr(tempsite, 'stocks', [stock(it.ref('Plate Mail'), 0, 2, True, False, False)])
+            setattr(tempsite, 'stocks', [stock(it.ref('Plate Mail'), 0, 2, True, False, False, True)])
             setattr(tempsite, 'money', r.randrange(1000, 3000))
             setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
             setattr(tempsite, 'economic', True)
@@ -187,13 +184,16 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
 
         if x in range(1, 5):  # todo dynamically create stocks based on what items the shop could create, based on the items craftMats
             # todo increase prices at tradeposts
-            # todo rename blacksmith to arms/armor shop, etc, since they dont craft anything
+
+
+            web.nodes[x]['sites'].append(pl.createPlace("Homes"))
+
             tempsite = pl.createPlace('Blacksmith')
-            setattr(tempsite, 'stocks', [stock(it.ref('Short Sword'), 0, 4, False, True, True),
-                                         stock(it.ref('Plate Mail'), 0, 1, False, True, True),
-                                         stock(it.ref('Dagger'), 0, 10, False, True, True),
-                                         stock(it.ref('Iron Ore'), 0, 20, True, False, False),
-                                         stock(it.ref('Wood'), 0, 20, True, False, False)])
+            setattr(tempsite, 'stocks', [stock(it.ref('Short Sword'), 0, 4, False, True, True, True),
+                                         stock(it.ref('Plate Mail'), 0, 1, False, True, True, True),
+                                         stock(it.ref('Dagger'), 0, 10, False, True, True, True),
+                                         stock(it.ref('Iron Ore'), 0, 20, True, False, False, False),
+                                         stock(it.ref('Wood'), 0, 20, True, False, False, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
             setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
             setattr(tempsite, 'economic', True)
@@ -201,8 +201,8 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             web.nodes[x]['sites'].append(tempsite)
 
             tempsite = pl.createPlace('Woodworker')
-            setattr(tempsite, 'stocks', [stock(it.ref('Club'), 0, 4, False, True, True),
-                                         stock(it.ref('Wood'), 0, 20, True, False, False)])
+            setattr(tempsite, 'stocks', [stock(it.ref('Club'), 0, 4, False, True, True, True),
+                                         stock(it.ref('Wood'), 0, 20, True, False, False, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
             setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
             setattr(tempsite, 'economic', True)
@@ -222,7 +222,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
         color_map[randnode] = 'blue'
         if web.nodes[randnode]['terrain'] == "mountains":
             tempsite = pl.createPlace('Mining Camp')
-            setattr(tempsite, 'stocks', [stock(it.ref('Iron Ore'), 0, 500, False, True, True)])
+            setattr(tempsite, 'stocks', [stock(it.ref('Iron Ore'), 0, 500, False, True, True, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
             setattr(tempsite, 'employees', employRandom(web, randnode, 3))  # todo set num employees based on size
             setattr(tempsite, 'economic', True)
@@ -231,7 +231,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
 
         elif web.nodes[randnode]['terrain'] == 'forest':
             tempsite = pl.createPlace('Lumbermill')
-            setattr(tempsite, 'stocks', [stock(it.ref('Wood'), 0, 500, False, True, True)])
+            setattr(tempsite, 'stocks', [stock(it.ref('Wood'), 0, 500, False, True, True, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
             setattr(tempsite, 'employees', employRandom(web, randnode, 3))  # todo set num employees based on size
             setattr(tempsite, 'economic', True)
@@ -255,13 +255,12 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
     web.graph['instability'] = 0
     web.graph['capital'] = capidx
 
-    kkloc = 3 #todo dont do it this way lol
+    #kkloc = 3 #todo dont do it this way lol
     #kkloc = r.randrange(r.randrange(len(web.nodes)))
-    pe.createBoss()  # todo re-add but change to normal person of kingkrog object
-    pe.kingKrog.location = kkloc
+    #pe.createBoss()  # todo re-add but change to normal person of kingkrog object
+    #pe.kingKrog.location = kkloc
 
     return web
-
 
 def fillEmptySources(web):
     for y in web.nodes:
@@ -270,7 +269,6 @@ def fillEmptySources(web):
                 for tocks in s.stocks:
                     if tocks.source is None:
                         tocks.source = findClosestSource(web, y, tocks.item.itemType)
-
 
 def findClosestSource(web, homeNode, itType):
     tempItem = it.ref(itType)
@@ -297,7 +295,6 @@ def findClosestSource(web, homeNode, itType):
 
     return None
 
-
 def runWorld(hours):
     global world
     global activeJobs
@@ -305,25 +302,23 @@ def runWorld(hours):
     progBar = '|..................................................|'
     prog = 0
     craftFlag = []
+    bonusAttrs = []
 
     for i in range(hours):
-        progBar = '|................................................|'
-        progBar = progBar[0:int(i / (hours / 50))] + "|" + progBar[int(i / (hours / 50)):]
-        # print(progBar, len(activeJobs))
-
-        # todo add paying employees. if payment not received, employee quits.
-        # todo paying taxes, if taxes not paid, shop closes
+        #progBar = '|................................................|'
+        #progBar = progBar[0:int(i / (hours / 50))] + "|" + progBar[int(i / (hours / 50)):]
+        #print(progBar)
 
         for node in world.nodes:
             for shop in world.nodes[node]['sites']:
                 for i in shop.stocks:
                     if len(i.entities) < i.reqStock:
-                        if not i.job:  # if the stock doesn't currently have a job
+                        if not i.job:                                                                                                                               # if the stock doesn't currently have a job
                             if i.source == 'self' and i.item.craftable and i.craft:
-                                tempCraft = craft(len(activeJobs), None, shop, i.item.craftQuantity, it.createItem(i.item.itemType), 'inactive')
+                                tempCraft = craft(len(activeJobs), None, shop, i.item.craftQuantity, it.createItem(i.item.itemType), 'inactive', i.item.craftSkill)
                                 for craftMatsOfItem in i.item.craftMats:
                                     tempCraft.craftMatProgress.append([craftMatsOfItem[0], 0, craftMatsOfItem[1]])
-                                setWorkerToJob(tempCraft)  # add job to create item
+                                setWorkerToJob(tempCraft)                                                                                                               # add job to create item
                                 i.job = tempCraft
 
                             elif i.source == 'self' and i.item.harvestable:
@@ -332,11 +327,11 @@ def runWorld(hours):
                                 i.job = tempHarvest
                             elif i.source == None:
                                 i.source = findClosestSource(world, shop.location, i.item.itemType)
-                            elif i.source is not None and i.buy:  # if the item has a source and the homeshop buys this item, set up shopping trip
+                            elif i.source is not None and i.buy:                                                                                # if the item has a source and the homeshop buys this item, set up shopping trip
 
-                                quantityToBuy = max(1, int(i.reqStock * 0.3))  # buy 30% of required stock
+                                quantityToBuy = max(1, int(i.reqStock * 0.3))                                                                   # buy 30% of required stock
                                 fullCost = quantityToBuy * i.item.cost
-                                if fullCost > shop.money:  # figure out how much the home shop can buy
+                                if fullCost > shop.money:                                                                                       # figure out how much the home shop can buy
                                     allowedCost = int(shop.money / i.item.cost) * i.item.cost
                                 else:
                                     allowedCost = fullCost
@@ -345,13 +340,14 @@ def runWorld(hours):
                                     shop.money -= allowedCost
                                     # e.busy = True
                                     i.source = findClosestSource(world, shop.location, i.item.itemType)
-                                    distance = 4  # todo make this actual distance between nodes
-                                    tempJob = shoppingTrip(len(activeJobs), None, shop, i.source, distance, allowedCost, shoppingBag(i.item, 0, quantityToBuy), i.item, False)  # fixme replace none with worker
-                                    setWorkerToJob(tempJob)
+                                    if i.source:
+                                        distance = 4  # todo make this actual distance between nodes
+                                        tempJob = shoppingTrip(len(activeJobs), None, shop, i.source, distance, allowedCost, shoppingBag(i.item, 0, quantityToBuy), i.item, False)
+                                        setWorkerToJob(tempJob)
+                                        i.job = tempJob
                                     # e.job = tempJob
                                     # e.location = [shop.location, i.source.location]
                                     # i.needState = 'being worked'
-                                    i.job = tempJob
                                 else:
                                     break
 
@@ -389,7 +385,7 @@ def runWorld(hours):
                                             e.location = [j.job.homeShop.location, j.job.shop.location]
                                         break
 
-                        if j.job.status == 'active':  # status 1 means job is still active
+                        if j.job.status == 'active':
                             if type(j.job) == harvest:  # todo have ites go into worker inv then move to store after inv limite reached
                                 stidx = findStockIndex(j.job.homeShop, j.job.item)
                                 for i in range(j.job.item.craftQuantity):
@@ -401,13 +397,28 @@ def runWorld(hours):
 
                             elif type(j.job) == craft:
                                 for craftProgress in j.job.craftMatProgress:
-                                    if craftProgress[1] < craftProgress[2]:  # if the number of materials applies is less than is needed
+                                    if craftProgress[1] < craftProgress[2]:                                         # if the number of materials applies is less than is needed
                                         for homeStocks in j.job.homeShop.stocks:
                                             if homeStocks.item.typeID == craftProgress[0]:
                                                 if len(homeStocks.entities) > 0:
-                                                    j.job.craftMatsApplied.append(homeStocks.entities.pop(0))
-                                                    craftProgress[1] += 1
-                                                    break
+                                                    smithSkill = j.job.worker.useSkill(j.job.skill)
+
+                                                    if smithSkill >= 100:
+                                                        bonusAttrs=[]
+                                                        for atr in dir(j.job.item):
+                                                            if atr[0:5] == 'bonus':
+                                                                bonusAttrs.append(atr)
+                                                        if len(bonusAttrs) > 0:
+                                                            bonAtr = bonusAttrs[r.randrange(0,len(bonusAttrs))]
+                                                            setattr(j.job.item, bonAtr, getattr(j.job.item, bonAtr) + 1)
+
+                                                    if smithSkill >= 30:
+                                                        j.job.craftMatsApplied.append(homeStocks.entities.pop(0))
+                                                        craftProgress[1] += 1
+                                                        break
+                                                    else:
+                                                        homeStocks.entities.pop(0)
+                                                        break
                                                 else:
                                                     j.job.status = 'need stock'
                                                     try:
@@ -422,7 +433,8 @@ def runWorld(hours):
                                 for each in j.job.craftMatProgress:
                                     if each[1] < each[2]:
                                         break
-                                else:
+                                else:                                                                   #item crafting complete
+
                                     sidx = findStockIndex(j.job.homeShop, j.job.item)
                                     j.job.homeShop.stocks[sidx].entities.append(j.job.item)
                                     j.job.item.craftMatsSource = []
@@ -439,10 +451,10 @@ def runWorld(hours):
                                     if not j.job.returning:  # buying from the shop
                                         stidx = findStockIndex(j.job.shop, j.job.item)
                                         for count in range(j.job.wagon.wants):  # for the quantity the buyer wants...
-                                            if j.job.wallet >= j.job.item.cost and len(j.job.shop.stocks[stidx].entities) >= 1:  # check if the buyer can afford it and the store has actual stock of the item
+                                            if j.job.money >= j.job.item.cost and len(j.job.shop.stocks[stidx].entities) >= 1:  # check if the buyer can afford it and the store has actual stock of the item
                                                 j.job.wagon.entities.append(j.job.shop.stocks[stidx].entities.pop(0))  # move the item to the buyers wagon
                                                 j.job.wagon.holding += 1  # mark the increase of wagon stock
-                                                j.job.wallet -= j.job.item.cost  # exchange money
+                                                j.job.money -= j.job.item.cost  # exchange money
                                                 j.job.shop.money += j.job.item.cost
                                             else:
                                                 break
@@ -459,7 +471,7 @@ def runWorld(hours):
                                         # j.homeShop.stocks[stidx].needState = 'fully stocked'
                                         # else:
                                         # j.homeShop.stocks[stidx].needState = 'under stocked'
-                                        j.job.homeShop.money += j.job.wallet
+                                        j.job.homeShop.money += j.job.money
                                         j.job.status = 'complete'
                                         j.job.worker.location = j.job.homeShop.location
 
@@ -469,19 +481,40 @@ def runWorld(hours):
                             stidx = findStockIndex(j.job.homeShop, j.job.item)
                             j.job.homeShop.stocks[stidx].job = None
 
-
 def setWorkerToJob(job):
-    if not job.worker:
-        for e in job.homeShop.employees:
-            if not e.job:
-                job.worker = e  # todo give workers skills and prioratize workers based on skill
-                job.status = 'active'
-                e.job = job
-                # j.worker.busy = True
-                if type(job) == shoppingTrip:
-                    e.location = [job.homeShop.location, job.shop.location]
-                break
+    mostTalented = None
+    highestTalent = 0
+    talent = None
 
+    if type(job) == craft:
+        if hasattr(job, 'skill'):
+            talent = getattr(job, 'skill')
+    elif type(job) == shoppingTrip:
+        talent = 'speed'
+    elif type(job) == harvest:
+        talent = job.item.craftSkill
+
+    if not job.worker:
+        if len(job.homeShop.employees) > 0:
+            for e in job.homeShop.employees:
+                if hasattr(e, talent):
+                    if getattr(e,talent) > highestTalent and not e.job:
+                        mostTalented = e
+                        highestTalent = getattr(e, talent)
+
+            if not mostTalented:
+                mostTalented = job.homeShop.employees[r.randrange(len(job.homeShop.employees))]
+
+            job.worker = mostTalented  # todo give workers skills and prioratize workers based on skill
+            job.status = 'active'
+            mostTalented.job = job
+            if type(job) == shoppingTrip:
+                try:
+                    mostTalented.location = [job.homeShop.location, job.shop.location]
+                except AttributeError:
+                    print("none error")
+        else:
+            print("hiring")
 
 def checkStockFull(store, item):
     for storeStocks in store.stocks:
@@ -491,20 +524,16 @@ def checkStockFull(store, item):
             else:
                 return False
 
-
 def findStockIndex(store, item):
     for stockidx, storeStocks in enumerate(store.stocks):
         if storeStocks.item.typeID == item.typeID:
             return stockidx
 
-
 def createSiteAtRandomLoc(web, sTID, name):
     web.nodes[r.randrange(len(web.nodes))]['sites'].append(pl.createPlace(sTID, name))
 
-
 def worldInfo():
     print("The capital city is " + str(world.graph['capital']))
-
 
 def saveWorld():
     global world
@@ -606,7 +635,6 @@ def randomName(type):
         for i in range(r.randrange(2,4)):
             name += cnsnnts[r.randrange(len(cnsnnts) - 1)] + oe[r.randrange(len(oe) - 1)]
     return name
-
 
 def employRandom(web, loc, num):
     templist = []

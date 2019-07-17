@@ -33,6 +33,19 @@ class person:
         self.employed = None
         self.homeLocation = homeLocation
 
+    def useSkill(self, skill, mod=0):
+        if not hasattr(self, skill):
+            setattr(self, skill, 0)
+
+        skillLevel = getattr(self, skill)
+
+        result = r.randrange(1,101) + skillLevel + mod
+
+        if r.randrange(1,101) >= skillLevel and  skillLevel < 100:
+                setattr(self, skill, skillLevel + 1)
+
+        return result
+
 class personType:
     def __init__(self, *args, **kwargs):
         for each in PERSON_HEADERS:
@@ -56,6 +69,7 @@ class personType:
         self.atkDesc = atkDesc
         self.addInv = addInv
     """
+
 class dead:
     def __init__(self, entityID, personType, name, inv, deathDate, deathLocation):
         self.entityID = entityID
@@ -65,23 +79,15 @@ class dead:
         self.deathDate = deathDate
         self.deathLocation = deathLocation
 
-"""
-class boss:
-    def __init__(self, name, stats, currentHP, location, attackTarget, sleepTimer):
-        self.name = name
-        self.stats = stats
-        self.currentHP = currentHP
-        self.location = location
-        self.attackTarget = attackTarget
-        self.sleepTimer = sleepTimer
-"""
 class player:
     def __init__(self, name, location, skills, magic):
         self.name = name
         self.location = location
         self.skills = skills
         self.magic = magic
-
+        self.timeAwake = 0
+        self.awake = True
+        self.hunger = 0
 
 def initPersonTypeList():
     global PERSON_HEADERS
@@ -109,7 +115,7 @@ def initPersonTypeList():
                 setattr(personTypeList[len(personTypeList) - 1], attr, tempval)
 
 def createPlayer(race, loc):
-    global me  # todo give player skills which grow as they use the skill more often
+    global me
     # for i in range(len(inv[0])):
     #    inv[0][i]=it.createItem(inv[0][i])
 
@@ -172,18 +178,6 @@ def createPlayer(race, loc):
     setEquipment()
     setMagic()
 
-def createBoss():
-    global kingKrog
-    kingKrog = createPerson(4, 1, 'King Krog')
-
-def findBoss():
-    global kingKrog
-
-    for baddie in persons:
-        if baddie.name == 'King Krog':
-            kingKrog = baddie
-
-
 def createPerson(pTID, number=1, name='null', currentHP=-500, location=-1, homeLocation=-1):
     multiAdd = []
     for i in range(number):
@@ -202,16 +196,19 @@ def createPerson(pTID, number=1, name='null', currentHP=-500, location=-1, homeL
         persons.append(person(int(len(persons)), personTypeList[pTID], setname, currentHP, 0, location, homeLocation))
         for val, attr in enumerate(list(personTypeList[0].__dict__.keys())):
             inv = []
-            if attr == 'busy':
-                setattr(persons[len(persons) - 1], attr, False)
+            #if attr == 'busy':
+            #    setattr(persons[len(persons) - 1], attr, False)
 
-            elif attr == "inv" or attr == "addInv":
-
+            if attr == "inv" or attr == "addInv":
                 invList = getattr(personTypeList[pTID], attr)
                 if invList != 0:
                     for i in invList:
                         inv.append(it.createItem(i))
                 setattr(persons[len(persons) - 1], attr, inv)
+
+            elif attr == 'money':
+                setattr(persons[len(persons) - 1], attr, 0)
+
             else:
                 setattr(persons[len(persons) - 1], attr, getattr(personTypeList[pTID], attr))
 

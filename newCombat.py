@@ -311,6 +311,7 @@ def attack():
         #pe.me.TIBS = 25
         #if pe.me.attackType == "S":
         #    pe.me.TIBS += 10
+        #todo update to UseSkill
         if r.randrange(100) >= getattr(pe.me.skills, eqWep.itemType):
             setattr(pe.me.skills, eqWep.itemType, getattr(pe.me.skills, eqWep.itemType) + 1)
             g.setText(label2=f"Your {eqWep.itemType} skill increases to {getattr(pe.me.skills, eqWep.itemType)}!")

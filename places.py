@@ -20,6 +20,8 @@ class place:
     def __init__(self, name, currentHP):
         self.name = name
         self.currentHP = currentHP
+        self.open = True
+        self.destroyed = False
 
 class placeType:
     def __init__(self, *args, **kwargs):
@@ -37,7 +39,6 @@ class placeType:
         self.extraSiteOption = extraSiteOption
         self.recipes = recipes
     '''
-
 
 def initPlaceTypeList():
     global PLACE_HEADERS

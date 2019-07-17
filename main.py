@@ -1,11 +1,12 @@
 import os
-
+import boss as b
 import events as ev
 import gui as g
 import items as it
 import people as pe
 import places as pl
 import worlds as w
+import times as t
 
 g.init()
 
@@ -37,9 +38,10 @@ else:
 
     if worldSize >= 2:
         w.world = w.buildWorld(worldSize, infestation)  # build the world if its big enough
-        w.runWorld(100)
-        w.saveWorldState()
         pe.createPlayer('human', 0)
+        b.createBoss()
+        t.timePasses(1000)
+        w.saveWorldState()
         w.saveWorld()
 
 # todo different race options?

@@ -1,6 +1,6 @@
 import csv
 import random as r
-
+import weakref as wr
 import gui as g
 import newCombat as c
 import people as pe
@@ -37,7 +37,7 @@ class itemType:
         self.special = special
         self.specialValue = specialValue
         self.recipe = recipe
-    """
+   
 
 
 def initMaterials():
@@ -58,7 +58,7 @@ def initMaterials():
                         tempval = row[val]
 
                 # setattr(materialList[len(materialList) - 1], attr, tempval)
-
+"""
 def initItemTypeList():
     global ITEM_HEADERS
 
@@ -88,6 +88,19 @@ def initItemTypeList():
 
                 setattr(itemTypeList[len(itemTypeList) - 1], attr, tempval)
 
+                if attr == 'use' and tempval == 'weapon':
+                    setattr(itemTypeList[len(itemTypeList) - 1], 'bonusDamage', 0)
+                    setattr(itemTypeList[len(itemTypeList) - 1], 'bonusAccuracy', 0)
+                if attr == 'use' and tempval == 'armor':
+                    setattr(itemTypeList[len(itemTypeList) - 1], 'bonusDefense', 0)
+                if attr == 'wear':
+                    setattr(itemTypeList[len(itemTypeList) - 1], 'wear', 0)
+                if attr == 'wears' and tempval == '':
+                    setattr(itemTypeList[len(itemTypeList) - 1], 'wears', True)
+                elif attr == 'wears' and tempval == 'False':
+                    setattr(itemTypeList[len(itemTypeList) - 1], 'wears', False)
+
+
 
 def ref(iTID):
     if type(iTID) == str:
@@ -101,6 +114,8 @@ def ref(iTID):
 
 def createItem(iTID, **kwargs):
 
+    #todo create weak references to EVERY item
+
     if type(iTID) == str:
         for idx, iT in enumerate(itemTypeList):
             if iTID == iT.itemType:
@@ -108,19 +123,30 @@ def createItem(iTID, **kwargs):
                 break
 
     if iTID != 0:
+        try:
+            newItemID = items[len(items)-1].itemEntityID + 1
+        except:
+            newItemID = 0
+
         items.append(item(iTID))
-        setattr(items[len(items) - 1], 'itemEntityID', len(items) - 1)
-        for val, attr in enumerate(list(itemTypeList[0].__dict__.keys())):
+        setattr(items[len(items) - 1], 'itemEntityID', newItemID)
+        for val, attr in enumerate(list(itemTypeList[iTID].__dict__.keys())):
             temp1 = items[len(items) - 1]
             temp2 = itemTypeList[iTID]
             setattr(temp1, attr, getattr(temp2, attr))
         for inputAttr in kwargs.keys():
             setattr(items[len(items) - 1], inputAttr, kwargs.get(inputAttr))
 
-        return items[int(len(items) - 1)]
+        return wr.proxy(items[int(len(items) - 1)])
 
-    if iTID == 0:
+    elif iTID == 0:
         return itemTypeList[0]
+
+def get(i, val):
+    try:
+        return i().val
+    except ReferenceError:
+        return None
 
 def createItemAt(itemTypeID, loc, name='0', desc='0'):
     return()

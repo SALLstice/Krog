@@ -1,11 +1,10 @@
 import random as r
-import sys
+
+# import weakref as wr
+import boss as b
 import gui as g
 import people as pe
 import worlds as w
-import items as it
-import weakref as wr
-import boss as b
 
 history = []
 
@@ -22,17 +21,16 @@ class notableEvent:
 
 def createCalendar(web):  # todo make seasons, randomize months and seasons, etc
 
-    setattr(web, 'hour', 8)
     setattr(web, 'startingDay', r.randrange(1, 28))
     setattr(web, 'startingMonth', r.randrange(1, 12))
     setattr(web, 'startingYear', r.randrange(100, 200))
 
+    setattr(web, 'hour', 8)
     setattr(web, 'day', web.startingDay)
     setattr(web, 'month', web.startingMonth)
     setattr(web, 'year', web.startingYear)
 
     return web
-
 
 def now():
     return f"{w.world.graph['year']:04d}{w.world.graph['month']:02d}{w.world.graph['day']:02d}{w.world.graph['hour']:02d}"
@@ -135,7 +133,7 @@ def newMonth():
     for n in w.world.nodes:
         for s in w.world.nodes[n]['sites']:
             if s.economic:
-                if s.area == 'town':
+                if s.area == 'krog':
                     if s.money >= TAXES:
                         s.money -= TAXES
                     else:
@@ -177,7 +175,7 @@ def createEvent(datetime, person, event, target, location, extra=0):
 
     history.append(
         notableEvent(datetime, person, event, target, location,
-                     extra))  # todo create event for deal damage to Ultra Krog
+                     extra))  # todo create event for deal damage to Ultra krog
 
 
 def printHistory():

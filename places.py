@@ -101,27 +101,28 @@ def arrive():
 
     if pe.kingKrog.location == pe.me.location:
         g.clearText()
-        g.setText(label4="The King Krog Is Here!")
+        g.setText(label4="The King krog Is Here!")
         c.initCombat(pe.kingKrog)
     else:
         g.dispTown()
 
-def visitRegionPlace():  #todo split lodInfo into branch options, shop, rumors, revisit known wild location, town inventory, food stores, etc
+
+def visitRegionPlace():  # todo split lodInfo into branch options, shop, rumors, revisit known wild location, krog inventory, food stores, etc
 
     # print("Shop\nRumors\nInfo") #todo make rumors and info
     # g.setText(label4 = f"You are in {loc}.")
     regSites = []
-    #todo once you learn Krog count, make that available in loc info. note "As of datetime, there were X Krogs in loc"
+    #todo once you learn krog count, make that available in loc info. note "As of datetime, there were X Krogs in loc"
                                                                                 #prints out every known site in location
     for site in w.world.nodes[pe.me.location]['sites']:
-        if site.area == 'town':
+        if site.area == 'krog':
             regSites.append(site)
         if site.area == 'wild' and site.known == 1:
             regSites.append(site)
 
     # dispList = [o.itemType for o in pe.me.inv]
     display = f"You are in {pe.me.location}."
-    g.initSelect(display, regSites, "", 'type', 'site', 'town')
+    g.initSelect(display, regSites, "", 'type', 'site', 'krog')
 
     # siteActivity(places[w.world.nodes[loc]['sites'][whereGo]])
 
@@ -135,7 +136,7 @@ def siteActivity(store):
         g.gwin.button0["command"] = lambda: it.displayItems(store)
 
         g.gwin.button1["text"] = "Sell"
-        g.gwin.button1["command"] = lambda: it.inventory(pe.me, 'sell', 'town', sellTo=store)
+        g.gwin.button1["command"] = lambda: it.inventory(pe.me, 'sell', 'krog', sellTo=store)
 
         if store.extraSiteOption != "":
             g.gwin.button2["text"] = store.extraSiteOption
@@ -155,7 +156,7 @@ def siteActivity(store):
     def siteExtra(store):
         if store.extraSiteOption == "Brew":
             g.clearText()
-            g.initSelect("Brew Potions", store, 'recipes',['itemType'],'brew','town')
+            g.initSelect("Brew Potions", store, 'recipes', ['itemType'], 'brew', 'krog')
 
 def setupTravelRT(dest):
     g.clearText()
@@ -331,8 +332,8 @@ def randomEncounter(encounterCode, encounterRate):
     encounterList = []
 
     if pe.me.name == "Druid": #for debugging
-        pe.me.inv.append(it.createItem('Krog Guts'))
-        pe.me.inv.append(it.createItem('Krog Guts'))
+        pe.me.inv.append(it.createItem('krog Guts'))
+        pe.me.inv.append(it.createItem('krog Guts'))
         for i in w.world.nodes[pe.me.location]['sites']:
             if i.area == 'wild':
                 encounterList.append([i, 's'])
@@ -360,11 +361,11 @@ def druid(drood):
     #todo add option to trade krog teeth for curative herbs
     #todo druid doesn't become known until payedextra. make even for becoming known
     g.clearText()
-    g.setText(label4= "Give me 2 Krog Guts and I can tell you how many Krogs are left in a region.")
+    g.setText(label4="Give me 2 krog Guts and I can tell you how many Krogs are left in a region.")
     gutCount = 0
     guts = []
 
-    gutList = it.checkInvForItems('Krog Guts', 2)
+    gutList = it.checkInvForItems('krog Guts', 2)
     g.gwin.button0["command"] = lambda:checkGuts(gutList)
 
     def checkGuts(gutCount):
@@ -382,7 +383,7 @@ def druid(drood):
                     krogCount += 1
             g.setText(label4=f"There are {krogCount} krogs still alive around {regionToSearch}.")
 
-            it.removeItemsFromInv(2, 'Krog Guts')
+            it.removeItemsFromInv(2, 'krog Guts')
 
             g.gwin.button0['command'] = lambda:arrive() #todo?
 

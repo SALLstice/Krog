@@ -1,7 +1,10 @@
 import os
 import pickle as p
 import random as r
+
 import networkx as nx
+
+import boss as b
 import items as it
 import people as pe
 import places as pl
@@ -238,7 +241,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             setattr(tempsite, 'location', x)
             web.nodes[randnode]['sites'].append(tempsite)
 
-    nx.draw(web, node_color=color_map, with_labels=True)
+    # nx.draw(web, node_color=color_map, with_labels=True)
     # plt.show()
 
     fillEmptySources(web)
@@ -249,7 +252,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
     createSiteAtRandomLoc(web, 8, 'Hunter Camp')
     createSiteAtRandomLoc(web, 13, 'Witch')
 
-    # create Krog Hill in a random node
+    # create krog Hill in a random node
     web.nodes[r.randrange(len(web.nodes))]['monsters'].append(pl.createPlace(4))
 
     web.graph['instability'] = 0
@@ -580,7 +583,7 @@ def loadWorld():
     with open(r"world/obituary.kr", "rb") as obi:
         pe.futureDead = p.load(obi)
 
-    pe.findBoss()
+    b.findBoss()
 
 def openInitialWorld():  # todo I think dead monster inventory loot resets
     global world
@@ -605,7 +608,7 @@ def openInitialWorld():  # todo I think dead monster inventory loot resets
         pe.futureDead = p.load(obi)
     obi.close()
 
-    pe.findBoss()
+    b.findBoss()
 
     # todo new characters don't keep known info about locs and roads?
     # todo can find journal of dead characters to learn all stuff they knew

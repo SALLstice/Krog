@@ -1,6 +1,7 @@
 import csv
 import random as r
 import weakref as wr
+
 import gui as g
 import newCombat as c
 import people as pe
@@ -167,7 +168,7 @@ def displayItems(store):
     # g.setText(label0=f"--- {store.type} Stock ---")
     # g.setText(label3=f"  -Item-\t\t\t\t-Strength-\t\t-Cost-")
     display = f"--- {store.type} Stock ---"
-    g.initSelect(display, store, 'inv', ['name', 'cost'], 'buy', 'town')
+    g.initSelect(display, store, 'inv', ['name', 'cost'], 'buy', 'krog')
 
 def buyItem(store, selection):
     if pe.me.money >= store.stocks[selection - 1].item.cost and len(store.stocks[selection - 1].entities) >= 1:
@@ -217,7 +218,7 @@ def useItem(itemToUse, returnTo):
 
     pe.me.inv.remove(itemToUse)
 
-    if returnTo == 'town':
+    if returnTo == 'krog':
         g.dispTown()
     elif returnTo == 'combat':
         pe.me.TIBS = 40

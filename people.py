@@ -2,6 +2,8 @@ import csv
 import pickle as p
 import random as r
 
+from django.shortcuts import render
+
 import gui as g
 import items as it
 import worlds as w
@@ -88,6 +90,11 @@ class player:
         self.timeAwake = 0
         self.awake = True
         self.hunger = 0
+
+
+def peopleLayout(request):
+    varDict = {'content': 'this came from people'}
+    return render(request, 'krog/personLayout.html', varDict)
 
 def initPersonTypeList():
     global PERSON_HEADERS

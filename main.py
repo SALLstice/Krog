@@ -1,12 +1,15 @@
 import os
+
+from django.shortcuts import render
+
 import boss as b
 import events as ev
 import gui as g
 import items as it
 import people as pe
 import places as pl
-import worlds as w
 import times as t
+import worlds as w
 
 g.init()
 
@@ -47,4 +50,9 @@ else:
 # todo different race options?
 # todo adult monsters can birth babies
 
+g.dispTown()
 g.gwin.mainloop()
+
+
+def mainlayout(request):
+    return render(request, 'krog/layout.html')

@@ -29,7 +29,7 @@ def initEvents():
                 setattr(eventList[len(eventList) - 1], attr, tempval)
 
 def runEvent(e):
-    g.initSelect(e.introText,e,"options",'','event','town')
+    g.initSelect(e.introText, e, "options", '', 'event', 'krog')
 
 def eventResults(result):
     if result == "greed":

@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <title id="title">Town</title>
+<body>
+<h2>{{content}}</h2>
+<h2>Enter Your Name:</h2>
+<form action="/personMaker.py">
+    <input name="charname" type="text">
+    <input type="submit" value="Submit">
+</form>
+
+{% block content %}
+<h2>New post</h2>
+<form class="post-form" method="POST">{% csrf_token %}
+    {{ form.as_p }}
+    <button class="save btn btn-default" type="submit">Save</button>
+</form>
+{% endblock %}
+</body>
+</html>

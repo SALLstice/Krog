@@ -18,7 +18,6 @@ def init():
     gwin.attributes("-topmost", True)
     gwin.attributes("-topmost", False)
 
-
 class gui(tk.Tk):
     def __init__(self, master):
         tk.Tk.__init__(self)
@@ -166,8 +165,8 @@ def updateStatus():
     gwin.eqAcc1L['text'] = f"Acc 1: {pe.me.equippedAcc1.itemType}"
     gwin.eqAcc2L['text'] = f"Acc 2: {pe.me.equippedAcc2.itemType}"
     gwin.locL['text'] = f"{w.world.nodes[pe.me.location]['name']}"
-    gwin.timeL['text'] = f"Time: {w.world.graph['hour']}:00"
-    gwin.dateL['text'] = f"Date: {w.world.graph['month']}/{w.world.graph['day']}/{w.world.graph['year']}"
+    gwin.timeL['text'] = f"Time: {w.world['hour']}:00"
+    gwin.dateL['text'] = f"Date: {w.world['month']}/{w.world['day']}/{w.world['year']}"
 
 def dispTown():
     gwin.button0.grid()
@@ -180,7 +179,7 @@ def dispTown():
     gwin.button0.configure(text="Explore", command=lambda: pl.setupExploreRT())
     gwin.button1.configure(text="Status", command=lambda: status())
     gwin.button2.configure(text="Region", command=lambda: pl.visitRegionPlace())
-    gwin.button3.configure(text="World", command=lambda: initSelect('Travel',w.world[pe.me.location],'_atlas','description','travel','town'))
+    gwin.button3.configure(text="World", command=lambda: initSelect('Travel', w.world[pe.me.location], '_atlas', 'description', 'travel', 'krog'))
 
 def setName(text):
     nameList=[]
@@ -244,6 +243,7 @@ def setAllText(adjust=0, *args):
     gwin.update()
 
 def setText(**kwargs):
+
     for value, key in enumerate(kwargs):
         gwin.__dict__[list(kwargs.keys())[value]]["text"] = list(kwargs.values())[value]
     gwin.update()
@@ -260,7 +260,7 @@ def status():
     gwin.button0["command"] = lambda: pe.dispSkills()
 
     gwin.button1["text"] = "Inventory"
-    gwin.button1["command"] = lambda: it.inventory(pe.me, 'use', 'town')
+    gwin.button1["command"] = lambda: it.inventory(pe.me, 'use', 'krog')
 
     gwin.button2["text"] = "-"
 
@@ -313,7 +313,7 @@ def initSelect(titleDisplay, holder, holderList, displayAttr, do, returnTo, sele
     select(titleDisplay, dispList, holder, holderList, displayAttr, do, returnTo, selection, sellTo)
 
 def retTo(returnTo):
-    if returnTo == "town":
+    if returnTo == "krog":
         pl.arrive()
     else:
         pl.arrive()

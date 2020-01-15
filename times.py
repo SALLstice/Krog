@@ -33,7 +33,7 @@ def createCalendar(web):  # todo make seasons, randomize months and seasons, etc
     return web
 
 def now():
-    return f"{w.world.graph['year']:04d}{w.world.graph['month']:02d}{w.world.graph['day']:02d}{w.world.graph['hour']:02d}"
+    return f"{w.world.year:04d}{w.world.month:02d}{w.world.day:02d}{w.world.hour:02d}"
     # str(w.world.graph['year']) + str(w.world.graph['month']) + str(w.world.graph['day']) + str(w.world.graph['hour'])
 
 

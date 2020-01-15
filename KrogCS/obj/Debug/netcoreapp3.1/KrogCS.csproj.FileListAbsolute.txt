@@ -1,0 +1,11 @@
+L:\C# Projects\krogCS\KrogCS\obj\Debug\netcoreapp3.1\KrogCS.csprojAssemblyReference.cache
+L:\C# Projects\krogCS\KrogCS\obj\Debug\netcoreapp3.1\KrogCS.AssemblyInfoInputs.cache
+L:\C# Projects\krogCS\KrogCS\obj\Debug\netcoreapp3.1\KrogCS.AssemblyInfo.cs
+L:\C# Projects\krogCS\KrogCS\bin\Debug\netcoreapp3.1\KrogCS.exe
+L:\C# Projects\krogCS\KrogCS\bin\Debug\netcoreapp3.1\KrogCS.deps.json
+L:\C# Projects\krogCS\KrogCS\bin\Debug\netcoreapp3.1\KrogCS.runtimeconfig.json
+L:\C# Projects\krogCS\KrogCS\bin\Debug\netcoreapp3.1\KrogCS.runtimeconfig.dev.json
+L:\C# Projects\krogCS\KrogCS\bin\Debug\netcoreapp3.1\KrogCS.dll
+L:\C# Projects\krogCS\KrogCS\bin\Debug\netcoreapp3.1\KrogCS.pdb
+L:\C# Projects\krogCS\KrogCS\obj\Debug\netcoreapp3.1\KrogCS.dll
+L:\C# Projects\krogCS\KrogCS\obj\Debug\netcoreapp3.1\KrogCS.pdb

@@ -10,7 +10,7 @@ import people as pe
 import places as pl
 import times as t
 
-world = 5
+world = 0
 activeJobs = []
 
 class road:
@@ -565,8 +565,9 @@ def loadWorld():
     global world
     #todo time is not loaded
     world = nx.read_gpickle(r'world/world.kr')
-    #world = nx.read_gml(r'world/world.kr')
+    #world = nx.read_gml(r'world/world.kr') dont use this
     world = nx.convert_node_labels_to_integers(world)
+    world = nx.read_gpickle(r'world/world.kr')
 
     with open(r"world/items.kr", "rb") as pit:
         it.items = p.load(pit)
@@ -585,12 +586,14 @@ def loadWorld():
 
     b.findBoss()
 
+
 def openInitialWorld():  # todo I think dead monster inventory loot resets
     global world
 
     world = nx.read_gpickle(r'world/worldStart.kr')
     #world = nx.read_gml('world/worldStart.kr')
     world = nx.convert_node_labels_to_integers(world)
+    world = nx.read_gpickle(r'world/worldStart.kr')
 
     with open(r"world/itemsStart.kr", "rb") as pit:
         it.items = p.load(pit)

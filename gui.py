@@ -165,8 +165,9 @@ def updateStatus():
     gwin.eqAcc1L['text'] = f"Acc 1: {pe.me.equippedAcc1.itemType}"
     gwin.eqAcc2L['text'] = f"Acc 2: {pe.me.equippedAcc2.itemType}"
     gwin.locL['text'] = f"{w.world.nodes[pe.me.location]['name']}"
-    gwin.timeL['text'] = f"Time: {w.world['hour']}:00"
-    gwin.dateL['text'] = f"Date: {w.world['month']}/{w.world['day']}/{w.world['year']}"
+    #gwin.timeL['text'] = f"Time: {w.world['hour']}:00"
+    #gwin.dateL['text'] = f"Date: {w.world['month']}/{w.world['day']}/{w.world['year']}"
+    #todo figure out why world keeps losing time
 
 def dispTown():
     gwin.button0.grid()

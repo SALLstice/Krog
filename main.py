@@ -1,7 +1,4 @@
 import os
-
-from django.shortcuts import render
-
 import boss as b
 import events as ev
 import gui as g

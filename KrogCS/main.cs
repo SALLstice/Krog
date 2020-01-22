@@ -7,8 +7,9 @@ using it = items;
 using pe = people;
 using pl = places;
 using t = times;
-using w = worlds;
 */
+
+using w = worlds;
 using System;
 using System.IO;
 
@@ -18,6 +19,7 @@ public static class main {
     static void Main() {
 
         // g.init();
+        object world;
 
         if (File.Exists("world/world.ks"))
         {
@@ -49,8 +51,10 @@ public static class main {
         else
         {
             if (worldSize >= 2){
+                Console.WriteLine("Building World...");
+                world = w.buildWorld(worldSize, infestation);
+                
                 /*
-                w.world = w.buildWorld(worldSize, infestation);
                 pe.createPlayer("human", 0);
                 b.createBoss();
                 t.timePasses(1000);
@@ -59,7 +63,7 @@ public static class main {
                 */
             }
         }
-
+        Console.WriteLine("Done");
         //g.dispTown();
         //g.gwin.mainloop();
     }

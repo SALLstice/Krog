@@ -10,13 +10,137 @@
 using System.Collections.Generic;
 using System;
 using System.Linq;
-using Microsoft.Msagl;
+using System.IO;
+//using Microsoft.Msagl;
 
 public static class worlds {
     
-    public static object world = 0;
-    public static List<object> activeJobs = new List<object>();
-    
+    public class world
+    {
+        public List<city> cities = new List<city>();
+        public List<road> roads = new List<road>();
+
+        public city addNewCity()
+        {
+            int size = main.worldSize;
+            Random rnd = new Random();
+            int[] cityLocation = {0,0};
+            bool repeat = false;
+            string cityName = "";
+
+            do
+            {
+                cityLocation[0] = rnd.Next(size);
+                cityLocation[1] = rnd.Next(size);
+                cityName = randomName("city");
+                repeat = false;
+
+                foreach(city city in this.cities)
+                {
+                    if (city.location.SequenceEqual(cityLocation)) //TODO: set range of minimu distance with pythagorean
+                    {
+                        repeat = true;
+                    }
+                    if (city.name == cityName) //TODO: set range of minimu distance with pythagorean
+                    {
+                        repeat = true;
+                    }
+
+                }
+
+            } while(repeat);
+            
+            city newCity = new city(cityName, cityLocation);
+            this.cities.Add(newCity);
+
+            return newCity;
+        }
+        
+        public road addNewRoad(city source, city target, string type = "road")
+        {
+            Random rnd = new Random();
+
+            string[] lines = File.ReadAllLines("roaddesc.txt");  
+
+            var desc1 = lines[rnd.Next(lines.Length)];
+            var desc2 = lines[rnd.Next(lines.Length)];
+            var desc = $"a {desc1}, {desc2}";
+
+            if (findRoad(source.name,target.name) is null)
+            {
+                road newRoad = new road(source, target,desc,false,3,0,type);
+                this.roads.Add(newRoad);
+                source.roads.Add(newRoad);
+                target.roads.Add(newRoad);
+                return newRoad;
+            }
+            else
+            {
+                return null;
+            }
+
+        }
+        
+        public city findCity(string name)
+        {
+            foreach(city city in this.cities)
+            {
+                if (name == city.name)
+                {
+                    return city;
+                }
+            }
+            return null;
+        }
+
+        public road findRoad(string cityname1, string cityname2)
+        {
+            foreach(road road in this.roads)
+            {
+                if(road.source.name == cityname1 || road.source.name == cityname2)
+                {
+                    if (road.target.name == cityname1 || road.target.name == cityname2)
+                    {
+                        return road;
+                    }
+                }
+            }
+            return null;
+        }
+    }
+
+    public class city 
+    {
+        public string name;
+        public int[] location;
+        public List<road> roads = new List<road>();
+
+        public city(string name, int[] location)
+        {
+            this.name = name;
+            this.location = location;
+        }
+
+        public List<city> allRoadsOut()
+        {
+            List<city> roadList = new List<city>();
+
+            foreach(road road in this.roads)
+            {
+                if(this == road.source)
+                {
+                    roadList.Add(road.target);
+                }
+                else
+                {
+                    roadList.Add(road.source);
+                }
+            }
+
+            return roadList;
+        }
+    }
+
     public class road 
     {
         public string desc;
@@ -25,13 +149,20 @@ public static class worlds {
         public int roughness;
         //public object travellers; todo: add back in maybe
         public string roadType;
+        public city source;
+        public city target;
         
-        public road(string desc, 
+        public road(
+            city source,
+            city target,
+            string desc, 
             bool known, 
             int length, 
             int roughness, 
             string roadType)
         {
+            this.source = source;
+            this.target = target;
             this.desc = desc;
             this.length = length;
             this.roadType = roadType;
@@ -185,23 +316,87 @@ public static class worlds {
         }
     }
     
-    public static object buildWorld(object numCities, object infestation) {
-        object tempsite;
+    public static world buildWorld(int worldSize, int numCities, int infestation) {
+        //object tempsite;
         //todo:: alternate worlds?
-        var capidx = 0;
+        //var capidx = 0;
         //it.createItem(0)
         //it.initItemTypeList();
         //pe.initPersonTypeList();
         //pl.initPlaceTypeList();
-  
-        Microsoft.Msagl.Drawing.Graph web = new Microsoft.Msagl.Drawing.Graph("graph");
-        web.AddEdge("Home Town", "Road 1", "Town 1");
-        web.AddEdge("Home Town", "Road 2", "Town 2");
-        web.AddEdge("Home Town", "Road 3", "Town 3");
-        web.AddEdge("Home Town", "Road 4", "Town 4");
+        Random rnd = new Random();
+        world web = new world();
 
-        //Microsoft.Msagl.Drawing.Node currentLocation = web.FindNode("Home Town");
-        //var A_Edges = web.FindNode("Home Town").Edges;
+        for (int i = 0; i < numCities; i++)
+        {
+            web.addNewCity();
+        }
+
+        int roadCount = 0;
+        //find closest cities and builds roads twice
+        
+        //TODO: detect crossroads and create trade post there somehow
+        foreach(city startcity in web.cities)
+        {   
+            roadCount = 0;
+            while(roadCount < 1)
+            { 
+                string closestCityName = "";
+
+                double dist = 999999;
+
+                int x1 = startcity.location[0];
+                int y1 = startcity.location[1];
+
+                foreach(city checkcity in web.cities)
+                {
+                    int x2 = checkcity.location[0];
+                    int y2 = checkcity.location[1];
+                    double checkdist = Math.Sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
+                    if (checkdist < dist && checkdist > 0 && web.findRoad(startcity.name,checkcity.name)==null)
+                    {
+                        closestCityName = checkcity.name;
+                        dist = checkdist;
+                    }
+                }
+
+                //TODO: 
+                //1 pick city "HOME"
+                //2 find home's 4 closest neightbors
+                //3 check if roads do not exist between them and home
+                //4 check that each nieghbor is not beween another nieghbor and home
+                    //4A draw box around neighbor
+                    //connect each corner of the box to home
+                    //if neighbor exists within that drawn figure, do not draw road to far neighbor
+                //5 draw roads which meet those requirements
+
+                city targetCity = web.findCity(closestCityName);
+                road newRoad = web.addNewRoad(startcity,targetCity);
+
+                if (newRoad != null)
+                {
+                    roadCount++;
+                }
+            }
+        }
+
+
+        var w = new StreamWriter("worldplot.csv");
+
+        foreach(city city in web.cities)
+        {
+            var line = city.name+","+city.location[0]+","+city.location[1]+",";
+
+            foreach(city cityList in city.allRoadsOut())
+            {
+                line += (cityList.name + ",");
+            }
+            w.WriteLine(line);
+            w.Flush();
+        }
+
+        //TODO: if cities are grouped together. Make them a kingdom. Otherwise, they are not part of a state
+
 
     /*
 
@@ -214,17 +409,7 @@ public static class worlds {
         using (var f = open("roaddesc.txt")) {
             lines = f.read().splitlines();
         }
-        foreach (var _tup_1 in web.edges(data: true)) {
-            var u = _tup_1.Item1;
-            var v = _tup_1.Item2;
-            var w = _tup_1.Item3;
-            var temp = r.sample(Enumerable.Range(0, lines.Count), 2);
-            var type = "road";
-            var desc = "a {str(lines[temp[0]])}, {str(lines[temp[1]])} {type}";
-            var lent = r.randrange(8, 25);
-            var kn = 0;
-            w["route"] = new road(desc, lent, type, kn, 1, new List<object>());
-        }
+
         //give each node sites and people
         foreach (var x in Enumerable.Range(0, web.nodes.Count)) {
             web.nodes[x]["name"] = randomName("city");
@@ -799,9 +984,10 @@ public static class worlds {
         }
         ppe.close();
     }
-    
+    */
     public static string randomName(string type) {
         var name = "";
+        Random rnd = new Random();
         var cnsnnts = new List<string> {
             "B",
             "C",
@@ -833,13 +1019,15 @@ public static class worlds {
             "Y"
         };
         if (type == "city") {
-            foreach (var i in Enumerable.Range(0, r.randrange(2, 4))) {
-                name += cnsnnts[r.randrange(cnsnnts.Count - 1)] + oe[r.randrange(oe.Count - 1)];
+            foreach (var i in Enumerable.Range(0, rnd.Next(2, 4))) {
+                name += cnsnnts[rnd.Next(cnsnnts.Count - 1)] + oe[rnd.Next(oe.Count - 1)];
             }
         }
         return name;
     }
-    
+
+
+    /*
     public static object employRandom(object web, int loc, int num) {
         var templist = new List<object>();
         foreach (var pers in web.nodes[loc]["population"]) {

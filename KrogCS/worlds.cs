@@ -4,22 +4,32 @@
 //using nx = networkx;
 //using b = boss;
 //using it = items;
-//using pe = people;
 //using pl = places;
 //using t = times;
 using System.Collections.Generic;
+using System.Globalization;
 using System;
 using System.Linq;
 using System.IO;
+using pe = people;
 //using Microsoft.Msagl;
 
 public static class worlds {
     
     public class world
     {
+        public List<region> regions = new List<region>();
         public List<city> cities = new List<city>();
         public List<road> roads = new List<road>();
+        public List<pe.Person> people = new List<pe.Person>();
 
+        public region addNewRegion()
+        {
+            region region = new region();
+            return region;
+        } //TODO: Create regions then populate with cities?
+          // Or drop cities randomly then section grid into regions?
+        
         public city addNewCity()
         {
             int size = main.worldSize;
@@ -107,6 +117,21 @@ public static class worlds {
             }
             return null;
         }
+    
+        public city randomCity()
+        {
+            Random rnd = new Random();
+
+            int index = rnd.Next(this.cities.Count);
+            return this.cities[index];
+        }
+    }
+
+    public class region
+    {
+        public city city = null; //FIXME:
+        public resource resource = new resource();
+
     }
 
     public class city 
@@ -114,6 +139,7 @@ public static class worlds {
         public string name;
         public int[] location;
         public List<road> roads = new List<road>();
+        public List<pe.Person> residents = new List<pe.Person>();
 
         public city(string name, int[] location)
         {
@@ -171,6 +197,11 @@ public static class worlds {
         }
     }
     
+    public class resource
+    {
+
+    }
+
     public class stock 
     {    
         public object buy;   
@@ -316,7 +347,52 @@ public static class worlds {
         }
     }
     
-    public static world buildWorld(int worldSize, int numCities, int infestation) {
+    public static string randomName(string type) 
+    {
+        var name = "";
+        Random rnd = new Random();
+        var cnsnnts = new List<string> {
+            "B",
+            "C",
+            "D",
+            "F",
+            "G",
+            "H",
+            "J",
+            "K",
+            "L",
+            "M",
+            "N",
+            "P",
+            "QU",
+            "R",
+            "S",
+            "T",
+            "V",
+            "W",
+            "X",
+            "Z"
+        };
+        var oe = new List<string> {
+            "A",
+            "E",
+            "U",
+            "I",
+            "O",
+            "Y"
+        };
+        if (type == "city") {
+            foreach (var i in Enumerable.Range(0, rnd.Next(2, 4))) {
+                name += cnsnnts[rnd.Next(cnsnnts.Count - 1)] + oe[rnd.Next(oe.Count - 1)];
+            }
+        }
+        TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
+
+        return ti.ToTitleCase(name);
+    }
+
+    public static world buildWorld(int worldSize, int numCities, int infestation) 
+    {
         //object tempsite;
         //todo:: alternate worlds?
         //var capidx = 0;
@@ -329,12 +405,11 @@ public static class worlds {
 
         for (int i = 0; i < numCities; i++)
         {
+            web.addNewRegion();
             web.addNewCity();
         }
 
         int roadCount = 0;
-        //find closest cities and builds roads twice
-        
         //TODO: detect crossroads and create trade post there somehow
         foreach(city startcity in web.cities)
         {   
@@ -368,6 +443,11 @@ public static class worlds {
                     //4A draw box around neighbor
                     //connect each corner of the box to home
                     //if neighbor exists within that drawn figure, do not draw road to far neighbor
+                    //4B list all neighbors, sort by distance.
+                    // From closest, check...
+                    // road does not already exist
+                    // road is not within the same Math.Atan2 +- 15degrees of another closer city
+                    // if so, draw raod
                 //5 draw roads which meet those requirements
 
                 city targetCity = web.findCity(closestCityName);
@@ -397,6 +477,30 @@ public static class worlds {
 
         //TODO: if cities are grouped together. Make them a kingdom. Otherwise, they are not part of a state
 
+        Console.WriteLine("Done Build World");
+        return web;
+        
+    }
+
+    public static void populateWorld()
+    {
+        Random rnd = new Random();
+
+        double range = 0.25;
+        int exp = 3;
+
+        double num = Math.Pow(main.numberOfCities,exp);
+        int lownum = Convert.ToInt32(num * (1 - range));
+        int hinum = Convert.ToInt32(num * (1 + range));
+
+        int numResidents = rnd.Next(lownum, hinum);
+
+        for (int i = 0; i <= numResidents; i++)
+        {
+            pe.newPerson();
+        }
+        
+    }
 
     /*
 
@@ -527,15 +631,14 @@ public static class worlds {
         web.graph["capital"] = capidx;
         //kkloc = 3 #todo: dont do it this way lol
         //kkloc = r.randrange(r.randrange(len(web.nodes)))
-        //pe.createBoss()  # todo: re-add but change to normal person of kingkrog object
+        //pe.createBoss()  # todo: re-add but change to normal Person of kingkrog object
         //pe.kingKrog.location = kkloc
 
         */
 
-        Console.WriteLine("Done Build World");
-        return web;
-        
-    }
+
+    
+    
     /*
     public static void fillEmptySources(object web) {
         foreach (var y in web.nodes) {
@@ -895,8 +998,8 @@ public static class worlds {
             p.dump(pl.places, ppl);
         }
         ppl.close();
-        using (var ppe = open(@"world/persons.kr", "wb")) {
-            p.dump(pe.persons, ppe);
+        using (var ppe = open(@"world/Persons.kr", "wb")) {
+            p.dump(pe.Persons, ppe);
         }
         ppe.close();
         using (var phi = open(@"world/history.kr", "wb")) {
@@ -922,8 +1025,8 @@ public static class worlds {
         using (var ppl = open(@"world/places.kr", "rb")) {
             pl.places = p.load(ppl);
         }
-        using (var ppe = open(@"world/persons.kr", "rb")) {
-            pe.persons = p.load(ppe);
+        using (var ppe = open(@"world/Persons.kr", "rb")) {
+            pe.Persons = p.load(ppe);
         }
         using (var phi = open(@"world/history.kr", "rb")) {
             t.history = p.load(phi);
@@ -948,8 +1051,8 @@ public static class worlds {
             pl.places = p.load(ppl);
         }
         ppl.close();
-        using (var ppe = open(@"world/personsStart.kr", "rb")) {
-            pe.persons = p.load(ppe);
+        using (var ppe = open(@"world/PersonsStart.kr", "rb")) {
+            pe.Persons = p.load(ppe);
         }
         ppe.close();
         using (var phi = open(@"world/history.kr", "rb")) {
@@ -979,52 +1082,13 @@ public static class worlds {
             p.dump(pl.places, ppl);
         }
         ppl.close();
-        using (var ppe = open(@"world/personsStart.kr", "wb")) {
-            p.dump(pe.persons, ppe);
+        using (var ppe = open(@"world/PersonsStart.kr", "wb")) {
+            p.dump(pe.Persons, ppe);
         }
         ppe.close();
     }
     */
-    public static string randomName(string type) {
-        var name = "";
-        Random rnd = new Random();
-        var cnsnnts = new List<string> {
-            "B",
-            "C",
-            "D",
-            "F",
-            "G",
-            "H",
-            "J",
-            "K",
-            "L",
-            "M",
-            "N",
-            "P",
-            "QU",
-            "R",
-            "S",
-            "T",
-            "V",
-            "W",
-            "X",
-            "Z"
-        };
-        var oe = new List<string> {
-            "A",
-            "E",
-            "U",
-            "I",
-            "O",
-            "Y"
-        };
-        if (type == "city") {
-            foreach (var i in Enumerable.Range(0, rnd.Next(2, 4))) {
-                name += cnsnnts[rnd.Next(cnsnnts.Count - 1)] + oe[rnd.Next(oe.Count - 1)];
-            }
-        }
-        return name;
-    }
+
 
 
     /*

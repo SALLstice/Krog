@@ -4,22 +4,27 @@ using b = boss;
 using ev = events;
 using g = gui;
 using it = items;
-using pe = people;
 using pl = places;
 using t = times;
 */
 
+using pe = people;
 using w = worlds;
 using System;
 using System.IO;
 
-public static class main {
-    public static int worldSize = 25;
+public class main {
+    public static int worldSize = 100;
+    public static int numberOfCities = 30;
     public static int infestation = 1;
+
+    public static w.world world = new w.world();
+    public static pe.Player me = new pe.Player("No Name");
+
     static void Main() {
 
         // g.init();
-        object world;
+        //object world;
 
         if (File.Exists("world/world.ks"))
         {
@@ -50,12 +55,13 @@ public static class main {
         } 
         else
         {
-            if (worldSize >= 2){
+            if (true){
                 Console.WriteLine("Building World...");
-                world = w.buildWorld(worldSize, infestation);
-                
+                world = w.buildWorld(worldSize, numberOfCities, infestation);
+                w.populateWorld();
+                me = pe.newPlayer("Joe");
+
                 /*
-                pe.createPlayer("human", 0);
                 b.createBoss();
                 t.timePasses(1000);
                 w.saveWorldState();

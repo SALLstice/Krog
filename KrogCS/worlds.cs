@@ -3,7 +3,7 @@
 //using r = random;
 //using nx = networkx;
 //using b = boss;
-//using it = items;
+using it = items;
 //using pl = places;
 //using t = times;
 using System.Collections.Generic;
@@ -16,57 +16,64 @@ using pe = people;
 
 public static class worlds {
     
-    public class world
+    public class World
     {
-        public List<region> regions = new List<region>();
-        public List<city> cities = new List<city>();
-        public List<road> roads = new List<road>();
+        public List<Region> regions = new List<Region>();
+        public List<City> cities = new List<City>();
+        public List<Road> roads = new List<Road>();
         public List<pe.Person> people = new List<pe.Person>();
+        public List<Crafter> crafters = new List<Crafter>();
 
-        public region addNewRegion()
-        {
-            region region = new region();
-            return region;
-        } //TODO: Create regions then populate with cities?
-          // Or drop cities randomly then section grid into regions?
-        
-        public city addNewCity()
-        {
-            int size = main.worldSize;
-            Random rnd = new Random();
-            int[] cityLocation = {0,0};
-            bool repeat = false;
-            string cityName = "";
-
-            do
+        public void coverWithRegions(){
+            for(int x = 0; x <= main.worldSize; x++)
             {
-                cityLocation[0] = rnd.Next(size);
-                cityLocation[1] = rnd.Next(size);
-                cityName = randomName("city");
-                repeat = false;
-
-                foreach(city city in this.cities)
+                for(int y = 0; y <= main.worldSize; y++)
                 {
-                    if (city.location.SequenceEqual(cityLocation)) //TODO: set range of minimu distance with pythagorean
-                    {
-                        repeat = true;
-                    }
-                    if (city.name == cityName) //TODO: set range of minimu distance with pythagorean
-                    {
-                        repeat = true;
-                    }
+                    
 
                 }
 
-            } while(repeat);
-            
-            city newCity = new city(cityName, cityLocation);
-            this.cities.Add(newCity);
+            }
+        }
 
+        public Region addNewRegion()
+        {
+            Region region = new Region();
+            int ws = main.worldSize;
+            Random rnd = new Random();
+            
+            string[] regionTypes = {"Mountains", "Coast", "Forest", "Grasslands"};
+            region.type = regionTypes[rnd.Next(regionTypes.Length)];
+
+            region.name = "The " + randomName() + " " + region.type;
+
+            //TODO: Create regions then populate with cities?
+            // Or drop cities randomly then section grid into regions?
+
+            this.regions.Add(region);
+
+            return region;
+        } 
+
+        public void addNewCity()
+        {
+            City newCity = buildNewCity();
+            newCity.placeCity(this);
+            
+            newCity.addShop("Weapon Shop");  
+            newCity.addShop("Blacksmith");  
+            //TODO: change that
+        }
+
+        public City buildNewCity()
+        {
+            City newCity = new City();
+            newCity.name = randomName("city");
+            newCity.world = this;
             return newCity;
         }
         
-        public road addNewRoad(city source, city target, string type = "road")
+        public Road addNewRoad(City source, City target, string type = "road")
         {
             Random rnd = new Random();
 
@@ -78,7 +85,7 @@ public static class worlds {
 
             if (findRoad(source.name,target.name) is null)
             {
-                road newRoad = new road(source, target,desc,false,3,0,type);
+                Road newRoad = new Road(source, target,desc,false,3,0,type);
                 this.roads.Add(newRoad);
                 source.roads.Add(newRoad);
                 target.roads.Add(newRoad);
@@ -91,9 +98,9 @@ public static class worlds {
 
         }
         
-        public city findCity(string name)
+        public City findCity(string name)
         {
-            foreach(city city in this.cities)
+            foreach(City city in this.cities)
             {
                 if (name == city.name)
                 {
@@ -103,9 +110,9 @@ public static class worlds {
             return null;
         }
 
-        public road findRoad(string cityname1, string cityname2)
+        public Road findRoad(string cityname1, string cityname2)
         {
-            foreach(road road in this.roads)
+            foreach(Road road in this.roads)
             {
                 if(road.source.name == cityname1 || road.source.name == cityname2)
                 {
@@ -118,40 +125,46 @@ public static class worlds {
             return null;
         }
     
-        public city randomCity()
+        public City randomCity()
         {
             Random rnd = new Random();
 
             int index = rnd.Next(this.cities.Count);
             return this.cities[index];
         }
+    
+        public void passTime(int hoursPassed)
+        {
+            for (int time = 1; time <= hoursPassed; time ++){
+                foreach(Crafter crafter in this.crafters)
+                {
+                    crafter.craft("Dagger");
+                }
+            }
+        }
     }
 
-    public class region
+    public class Region
     {
-        public city city = null; //FIXME:
-        public resource resource = new resource();
-
+        public string name;
+        public string type;
     }
 
-    public class city 
+    public class City 
     {
         public string name;
         public int[] location;
-        public List<road> roads = new List<road>();
+        public List<Road> roads = new List<Road>();
         public List<pe.Person> residents = new List<pe.Person>();
+        public List<Shop> shops = new List<Shop>();
+        public Region region; 
+        public World world;
 
-        public city(string name, int[] location)
+        public List<City> allRoadsOut()
         {
-            this.name = name;
-            this.location = location;
-        }
+            List<City> roadList = new List<City>();
 
-        public List<city> allRoadsOut()
-        {
-            List<city> roadList = new List<city>();
-
-            foreach(road road in this.roads)
+            foreach(Road road in this.roads)
             {
                 if(this == road.source)
                 {
@@ -165,9 +178,98 @@ public static class worlds {
 
             return roadList;
         }
+    
+        public void addShop(string shopType)
+        {
+            switch(shopType)
+            {
+                case "Weapon Shop":
+                    WeaponShop newShop = new WeaponShop();
+
+                    it.Stock daggerStock = new it.Stock();
+                    daggerStock.item = it.createItem("Dagger");
+                    daggerStock.reqStock = 10;
+                    newShop.stocks.Add(daggerStock);//FIXME make this dynamic versus hard coded
+                    
+                    this.shops.Add(newShop);
+                    break;
+                case "Blacksmith":
+                    Crafter blacksmith = new Crafter();
+
+                    it.Stock smithDaggerStock = new it.Stock();
+                    smithDaggerStock.item = it.createItem("Dagger");
+                    smithDaggerStock.reqStock = 10;
+
+                    blacksmith.stocks.Add(smithDaggerStock);
+                    
+                    this.world.crafters.Add(blacksmith);
+                    this.shops.Add(blacksmith);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+    
+        public void placeCity(World world){
+            
+            int size = main.worldSize;
+            Random rnd = new Random();
+            bool repeat = false;
+            
+            int[] cityLocation = {0,0};
+            do
+            {
+                cityLocation[0] = rnd.Next(size);
+                cityLocation[1] = rnd.Next(size);
+                repeat = false;
+
+                foreach(City cityToCheck in main.world.cities)
+                {
+                    if (cityToCheck.location.SequenceEqual(cityLocation)) //TODO: set range of minimu distance with pythagorean
+                    {
+                        repeat = true;
+                    }
+                }
+
+            } while(repeat);
+
+            this.region = world.addNewRegion();
+            world.cities.Add(this); 
+            this.location = cityLocation;
+        }
     }
 
-    public class road 
+    public class Shop
+    {
+        public List<it.Stock> stocks = new List<it.Stock>();
+    }
+
+    public class WeaponShop : Shop
+    {
+
+    }
+
+    public class Crafter : Shop
+    {
+        public void craft(string itemToCraft)
+        {
+            foreach(it.Stock stock in this.stocks)
+            {
+                if (itemToCraft == stock.item.typeName)
+                {
+                    stock.stocks.Add(it.createItem(itemToCraft));
+                }
+            }
+        }
+    }
+
+    public class resourceSite
+    {
+
+    }
+
+    public class Road 
     {
         public string desc;
         public bool known;
@@ -175,12 +277,12 @@ public static class worlds {
         public int roughness;
         //public object travellers; todo: add back in maybe
         public string roadType;
-        public city source;
-        public city target;
+        public City source;
+        public City target;
         
-        public road(
-            city source,
-            city target,
+        public Road(
+            City source,
+            City target,
             string desc, 
             bool known, 
             int length, 
@@ -194,47 +296,6 @@ public static class worlds {
             this.roadType = roadType;
             this.known = known;
             this.roughness = roughness;
-        }
-    }
-    
-    public class resource
-    {
-
-    }
-
-    public class stock 
-    {    
-        public object buy;   
-        public object craft;
-        public List<object> entities;
-        public object item;
-        public object job;
-        public object reqStock;
-        public object sell;
-        public object source;
-        public object storeStock;
-        
-        public stock(object item, 
-            int inStock, 
-            int reqStock, 
-            bool buy, 
-            bool sell, 
-            bool craft, 
-            bool storeStock, 
-            string need = "unknown", 
-            object job = null) 
-        {
-            this.item = item;
-            // self.inStock = inStock
-            this.reqStock = reqStock;
-            this.entities = new List<object>();
-            // self.needState = need
-            this.source = null;
-            this.buy = buy;
-            this.sell = sell;
-            this.craft = craft;
-            this.job = job;
-            this.storeStock = storeStock;
         }
     }
     
@@ -347,7 +408,7 @@ public static class worlds {
         }
     }
     
-    public static string randomName(string type) 
+    public static string randomName(string type ="") 
     {
         var name = "";
         Random rnd = new Random();
@@ -381,37 +442,34 @@ public static class worlds {
             "O",
             "Y"
         };
-        if (type == "city") {
+        if (type == "city" || 1==1) { //TODO: Make different random name types
             foreach (var i in Enumerable.Range(0, rnd.Next(2, 4))) {
                 name += cnsnnts[rnd.Next(cnsnnts.Count - 1)] + oe[rnd.Next(oe.Count - 1)];
             }
         }
         TextInfo ti = CultureInfo.CurrentCulture.TextInfo;
 
-        return ti.ToTitleCase(name);
+        return ti.ToTitleCase(name.ToLower());
     }
 
-    public static world buildWorld(int worldSize, int numCities, int infestation) 
+    public static World buildWorld(int worldSize, int numCities, int infestation) 
     {
-        //object tempsite;
-        //todo:: alternate worlds?
-        //var capidx = 0;
-        //it.createItem(0)
-        //it.initItemTypeList();
-        //pe.initPersonTypeList();
-        //pl.initPlaceTypeList();
+        //TODO: alternate worlds?
+
         Random rnd = new Random();
-        world web = new world();
+        World web = new World();
 
         for (int i = 0; i < numCities; i++)
         {
-            web.addNewRegion();
+            //web.addNewRegion();
+            
+            //performs full build and construction of city and places it in the world.
             web.addNewCity();
         }
 
         int roadCount = 0;
         //TODO: detect crossroads and create trade post there somehow
-        foreach(city startcity in web.cities)
+        foreach(City startcity in web.cities)
         {   
             roadCount = 0;
             while(roadCount < 1)
@@ -423,7 +481,7 @@ public static class worlds {
                 int x1 = startcity.location[0];
                 int y1 = startcity.location[1];
 
-                foreach(city checkcity in web.cities)
+                foreach(City checkcity in web.cities)
                 {
                     int x2 = checkcity.location[0];
                     int y2 = checkcity.location[1];
@@ -450,8 +508,8 @@ public static class worlds {
                     // if so, draw raod
                 //5 draw roads which meet those requirements
 
-                city targetCity = web.findCity(closestCityName);
-                road newRoad = web.addNewRoad(startcity,targetCity);
+                City targetCity = web.findCity(closestCityName);
+                Road newRoad = web.addNewRoad(startcity,targetCity);
 
                 if (newRoad != null)
                 {
@@ -463,11 +521,11 @@ public static class worlds {
 
         var w = new StreamWriter("worldplot.csv");
 
-        foreach(city city in web.cities)
+        foreach(City city in web.cities)
         {
             var line = city.name+","+city.location[0]+","+city.location[1]+",";
 
-            foreach(city cityList in city.allRoadsOut())
+            foreach(City cityList in city.allRoadsOut())
             {
                 line += (cityList.name + ",");
             }
@@ -502,6 +560,7 @@ public static class worlds {
         
     }
 
+    
     /*
 
         /// FIXME: web = t.createCalendar(web);

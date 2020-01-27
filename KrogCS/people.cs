@@ -28,26 +28,26 @@ public class people {
         //public object homeLocation;        
         //public job job;              
         public string name;      
-        public w.city location;    
+        public w.City location;    
         //public object personType;        
         //public object status;        
         //public int wallet;
         
-        public Person(string name="", w.city loc = null) 
+        public Person(string name="", w.City loc = null) 
         {
             //this.name = (name == "") ? w.randomName("Person") : name;
             //this.location = (loc == null) ? main.world.randomCity() : loc;
 
         }
         
-        public void placeInWorld(w.city loc)
+        public void placeInWorld(w.City loc)
         {
-            main.world.people.Add(this);
+            main.world.people.Add(this); //FIXME Dont point to main world
             loc.residents.Add(this);
             this.location = loc;
         }
 
-        public void moveLocation(w.city loc)
+        public void moveLocation(w.City loc)
         {
             this.location.residents.Remove(this);
             this.location = loc;
@@ -160,7 +160,7 @@ public class people {
     public static Player newPlayer(string name)
     {
         Player newb = new Player(name);
-        w.city newLocation = main.world.randomCity();
+        w.City newLocation = main.world.randomCity(); 
 
         newb.placeInWorld(newLocation);
 

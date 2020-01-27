@@ -1,18 +1,10 @@
-
-using r = random;
-
-using b = boss;
-
-using g = gui;
-
+//using r = random;
+//using b = boss;
+//using g = gui;
 using pe = people;
-
 using w = worlds;
-
 using System.Collections.Generic;
-
 using System;
-
 using System.Linq;
 
 public static class times {
@@ -48,7 +40,7 @@ public static class times {
             this.extra = extra;
         }
     }
-    
+    /*
     public static void createCalendar(object web) {
         // todo make seasons, randomize months and seasons, etc
         setattr(web, "startingDay", r.randrange(1, 28));
@@ -60,12 +52,14 @@ public static class times {
         setattr(web, "year", web.startingYear);
         return web;
     }
-    
+    */
+    /*
     public static string now() {
         return "{w.world.year:04d}{w.world.month:02d}{w.world.day:02d}{w.world.hour:02d}";
         // str(w.world.graph['year']) + str(w.world.graph['month']) + str(w.world.graph['day']) + str(w.world.graph['hour'])
     }
-    
+    */
+    /*
     public static void timePasses(int timePassed = 1, string byThe = "hour") {
         // todo player gets sleepy and hungry
         if (byThe == "day") {
@@ -256,4 +250,5 @@ public static class times {
             e.target.currentHP -= e.extra;
         }
     }
+    */
 }

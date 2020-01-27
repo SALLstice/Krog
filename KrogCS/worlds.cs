@@ -14,8 +14,8 @@ using System.IO;
 using pe = people;
 //using Microsoft.Msagl;
 
-public static class worlds {
-    
+public static class worlds
+{
     public class World
     {
         public List<Region> regions = new List<Region>();
@@ -23,13 +23,19 @@ public static class worlds {
         public List<Road> roads = new List<Road>();
         public List<pe.Person> people = new List<pe.Person>();
         public List<Crafter> crafters = new List<Crafter>();
+        public List<Business> shops = new List<Business>();
+        public List<Harvester> harvesters = new List<Harvester>();
+        public List<Business> businesses = new List<Business>();
+        public List<it.Item> items = new List<it.Item>();
+        public List<it.Item> artifacts = new List<it.Item>();
 
-        public void coverWithRegions(){
-            for(int x = 0; x <= main.worldSize; x++)
+        public void coverWithRegions()
+        {
+            for (int x = 0; x <= main.worldSize; x++)
             {
-                for(int y = 0; y <= main.worldSize; y++)
+                for (int y = 0; y <= main.worldSize; y++)
                 {
-                    
+
 
                 }
 
@@ -41,11 +47,13 @@ public static class worlds {
             Region region = new Region();
             int ws = main.worldSize;
             Random rnd = new Random();
-            
-            string[] regionTypes = {"Mountains", "Coast", "Forest", "Grasslands"};
+
+            string[] regionTypes = { "Mountains", "Coast", "Forest", "Grasslands" };
             region.type = regionTypes[rnd.Next(regionTypes.Length)];
 
             region.name = "The " + randomName() + " " + region.type;
+
+            region.bounty = rnd.NextDouble();
 
             //TODO: Create regions then populate with cities?
             // Or drop cities randomly then section grid into regions?
@@ -53,16 +61,16 @@ public static class worlds {
             this.regions.Add(region);
 
             return region;
-        } 
+        }
 
         public void addNewCity()
         {
             City newCity = buildNewCity();
             newCity.placeCity(this);
-            
-            newCity.addShop("Weapon Shop");  
-            newCity.addShop("Blacksmith");  
-            //TODO: change that
+
+            newCity.addShop("Weapon Shop");
+            newCity.addShop("Blacksmith");
+            newCity.addShop("Mine");
         }
 
         public City buildNewCity()
@@ -72,20 +80,20 @@ public static class worlds {
             newCity.world = this;
             return newCity;
         }
-        
+
         public Road addNewRoad(City source, City target, string type = "road")
         {
             Random rnd = new Random();
 
-            string[] lines = File.ReadAllLines("roaddesc.txt");  
+            string[] lines = File.ReadAllLines("roaddesc.txt");
 
             var desc1 = lines[rnd.Next(lines.Length)];
             var desc2 = lines[rnd.Next(lines.Length)];
             var desc = $"a {desc1}, {desc2}";
 
-            if (findRoad(source.name,target.name) is null)
+            if (findRoad(source.name, target.name) is null)  //FIXME: sometimes this bugs out
             {
-                Road newRoad = new Road(source, target,desc,false,3,0,type);
+                Road newRoad = new Road(source, target, desc, false, 3, 0, type);
                 this.roads.Add(newRoad);
                 source.roads.Add(newRoad);
                 target.roads.Add(newRoad);
@@ -97,10 +105,10 @@ public static class worlds {
             }
 
         }
-        
+
         public City findCity(string name)
         {
-            foreach(City city in this.cities)
+            foreach (City city in this.cities)
             {
                 if (name == city.name)
                 {
@@ -112,9 +120,9 @@ public static class worlds {
 
         public Road findRoad(string cityname1, string cityname2)
         {
-            foreach(Road road in this.roads)
+            foreach (Road road in this.roads)
             {
-                if(road.source.name == cityname1 || road.source.name == cityname2)
+                if (road.source.name == cityname1 || road.source.name == cityname2)
                 {
                     if (road.target.name == cityname1 || road.target.name == cityname2)
                     {
@@ -124,7 +132,7 @@ public static class worlds {
             }
             return null;
         }
-    
+
         public City randomCity()
         {
             Random rnd = new Random();
@@ -132,15 +140,61 @@ public static class worlds {
             int index = rnd.Next(this.cities.Count);
             return this.cities[index];
         }
-    
+
         public void passTime(int hoursPassed)
         {
-            for (int time = 1; time <= hoursPassed; time ++){
-                foreach(Crafter crafter in this.crafters)
+
+            for (int time = 1; time <= hoursPassed; time++)
+            {
+                foreach(Business business in this.businesses)
                 {
-                    crafter.craft("Dagger");
+                    business.checkAndHireRandomEmployee();
+
+                    if(hoursPassed % 7 == 0){
+                        business.payEmployees();
+                    }
+                }
+
+                foreach(ItemShop itemShop in this.shops)
+                {
+                    itemShop.randomSales();
+                }
+
+                foreach (Crafter crafter in this.crafters)
+                {
+                    foreach (it.Stock stock in crafter.stocks)
+                    {
+                        if (stock.willCraft && stock.stocks.Count <= stock.maxStock)
+                        {
+                            crafter.craftAll();
+                        }
+                    }
+                    
+                    crafter.tradeAwayItem();
+                }
+
+                foreach(var harvester in this.harvesters)
+                {
+                    harvester.harvest();
+                    harvester.tradeAwayItem();
+                }
+                
+                foreach(var item in this.items)
+                {
+                    item.naturalWear();
+                    item.ageItem();
+                }
+
+                foreach(City city in this.cities)
+                {
+                    city.totalMoney = 0;
+                    foreach(Business shop in city.businesses)
+                    {
+                        city.totalMoney += shop.money;
+                    }
                 }
             }
+
         }
     }
 
@@ -148,83 +202,108 @@ public static class worlds {
     {
         public string name;
         public string type;
+        public double bounty;
     }
 
-    public class City 
+    public class City
     {
         public string name;
         public int[] location;
         public List<Road> roads = new List<Road>();
         public List<pe.Person> residents = new List<pe.Person>();
-        public List<Shop> shops = new List<Shop>();
-        public Region region; 
+        public List<Business> businesses = new List<Business>();
+        public Region region;
         public World world;
+        public int totalMoney;
 
-        public List<City> allRoadsOut()
+        public List<City> findAllNeighbors()
         {
-            List<City> roadList = new List<City>();
+            List<City> neighborList = new List<City>();
 
-            foreach(Road road in this.roads)
+            foreach (Road road in this.roads)
             {
-                if(this == road.source)
+                if (this == road.source)
                 {
-                    roadList.Add(road.target);
+                    neighborList.Add(road.target);
                 }
                 else
                 {
-                    roadList.Add(road.source);
+                    neighborList.Add(road.source);
                 }
             }
 
-            return roadList;
+            return neighborList;
         }
-    
+
         public void addShop(string shopType)
         {
-            switch(shopType)
+            Random rnd = new Random();
+
+            switch (shopType)
             {
                 case "Weapon Shop":
-                    WeaponShop newShop = new WeaponShop();
+                    ItemShop newShop = new ItemShop();
 
-                    it.Stock daggerStock = new it.Stock();
-                    daggerStock.item = it.createItem("Dagger");
-                    daggerStock.reqStock = 10;
-                    newShop.stocks.Add(daggerStock);//FIXME make this dynamic versus hard coded
-                    
-                    this.shops.Add(newShop);
+                    newShop.newStock("Dagger", 5, 10, true, false, false, false);
+                    newShop.money = rnd.Next(50,100);
+                    newShop.payRate = 3;
+                    newShop.maxWorkers = 2;
+
+                    this.world.businesses.Add(newShop);
+                    this.world.shops.Add(newShop);
+                    this.businesses.Add(newShop);
+                    newShop.city = this;
                     break;
+
                 case "Blacksmith":
                     Crafter blacksmith = new Crafter();
 
-                    it.Stock smithDaggerStock = new it.Stock();
-                    smithDaggerStock.item = it.createItem("Dagger");
-                    smithDaggerStock.reqStock = 10;
+                    blacksmith.newStock("Dagger", 3, 5, false, true, true,false);
+                    blacksmith.newStock("Iron Ore", 20,50, true,false,false,false);
+                    blacksmith.money = rnd.Next(50,100);
+                    blacksmith.payRate = 2;
+                    blacksmith.maxWorkers = 3;
 
-                    blacksmith.stocks.Add(smithDaggerStock);
-                    
+                    this.world.businesses.Add(blacksmith);
                     this.world.crafters.Add(blacksmith);
-                    this.shops.Add(blacksmith);
+                    this.businesses.Add(blacksmith);
+                    blacksmith.city = this;
+                    break;
+
+                case "Mine":
+                    Harvester newMine = new Harvester();
+
+                    newMine.newStock("Iron Ore", 5, 50,false,true,false,true);
+                    newMine.money = rnd.Next(50,100);
+                    newMine.payRate = 1;
+                    newMine.maxWorkers = 10;
+
+                    this.world.businesses.Add(newMine);
+                    this.world.harvesters.Add(newMine);
+                    this.businesses.Add(newMine);
+                    newMine.city = this;
                     break;
 
                 default:
                     break;
             }
         }
-    
-        public void placeCity(World world){
-            
+
+        public void placeCity(World world)
+        {
+
             int size = main.worldSize;
             Random rnd = new Random();
             bool repeat = false;
-            
-            int[] cityLocation = {0,0};
+
+            int[] cityLocation = { 0, 0 };
             do
             {
                 cityLocation[0] = rnd.Next(size);
                 cityLocation[1] = rnd.Next(size);
                 repeat = false;
 
-                foreach(City cityToCheck in main.world.cities)
+                foreach (City cityToCheck in main.world.cities)
                 {
                     if (cityToCheck.location.SequenceEqual(cityLocation)) //TODO: set range of minimu distance with pythagorean
                     {
@@ -232,61 +311,227 @@ public static class worlds {
                     }
                 }
 
-            } while(repeat);
+            } while (repeat);
 
             this.region = world.addNewRegion();
-            world.cities.Add(this); 
+            world.cities.Add(this);
             this.location = cityLocation;
         }
     }
 
-    public class Shop
+    public class Business
     {
         public List<it.Stock> stocks = new List<it.Stock>();
-    }
+        public City city = new City();
+        public int money;
+        public List<pe.Person> employees = new List<pe.Person>();
+        public int maxWorkers;
+        public Random rnd = new Random();
+        public int payRate;
 
-    public class WeaponShop : Shop
-    {
+        public void checkAndHireRandomEmployee()
+        {
+            if(this.employees.Count < this.maxWorkers && this.money >= this.payRate)
+            {                
+                foreach(pe.Person newWorker in this.city.residents){
+                    if (newWorker.jobSite == null)
+                    {
+                        newWorker.jobSite = this;
+                        this.employees.Add(newWorker);
 
-    }
+                        break;
+                    }
+                }
+            }
+        }
 
-    public class Crafter : Shop
-    {
-        public void craft(string itemToCraft)
+        public void payEmployees()
+        {
+            foreach(pe.Person employee in this.employees.ToList())
+            {
+                if(this.money >= this.payRate)
+                {
+                    employee.money += this.payRate;
+                    this.money -= this.payRate;
+                }
+                else
+                {
+                    this.employees.Remove(employee);
+                    employee.jobSite = null;
+                }
+            }
+        }
+
+        public void newStock(string itemType, int min, int max, bool willBuy, bool willSell, bool willCraft, bool willHarvest)
+        {
+            it.Stock newStock = new it.Stock();
+            newStock.item = it.createItem(itemType);
+            newStock.minStock = min;
+            newStock.maxStock = max;
+            newStock.willBuy = willBuy;
+            newStock.willSell = willSell;
+            newStock.willCraft = willCraft;
+            newStock.willHarvest = willHarvest;
+            this.stocks.Add(newStock);
+        }
+
+        public void tradeAwayItem()
+        {
+            foreach (Business shopAroundTown in this.city.businesses)
+            {
+                checkAndSellToNeighbors(shopAroundTown);
+            }
+
+            foreach (City neighbor in this.city.findAllNeighbors())
+            {
+                foreach (Business neighborshop in neighbor.businesses)
+                {
+                    checkAndSellToNeighbors(neighborshop);
+                }
+            }
+        }
+
+        public void checkAndSellToNeighbors(Business neighborshop)
+        {
+            foreach (it.Stock neighborstock in neighborshop.stocks)
+            {
+                if (neighborstock.stocks.Count < neighborstock.maxStock && neighborshop.money >= neighborstock.item.cost)
+                {
+                    foreach (it.Stock homestock in this.stocks)
+                    {
+                        if (homestock.item.itemType == neighborstock.item.itemType && homestock.willSell == true)
+                        {
+                            if (homestock.stocks.Count >= homestock.minStock)
+                            {
+                                for (int i = 1; i <= 1; i++)
+                                { //FIXME: make it diff from nieghbor stock. not 1
+                                    it.Item item = homestock.stocks[0];
+                                    homestock.stocks.RemoveAt(0);
+                                    neighborstock.stocks.Add(item);
+
+                                    neighborshop.money -= homestock.item.cost;
+                                    this.money += homestock.item.cost;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        public int stockCount(string itemType)
         {
             foreach(it.Stock stock in this.stocks)
             {
-                if (itemToCraft == stock.item.typeName)
+                if (stock.item.itemType == itemType){
+                    return stock.stocks.Count;
+                }
+            }
+            return 0;
+        }
+
+        public void destoryStock(string itemType)
+        {
+            foreach(it.Stock stock in this.stocks)
+            {
+                if (stock.item.itemType == itemType){
+                    stock.stocks.RemoveAt(0);
+                }
+            }
+        }
+    
+        public void removeUnusableStock(){
+            foreach(it.Stock stock in this.stocks)
+            {
+                foreach(it.Item item in stock.stocks)
                 {
-                    stock.stocks.Add(it.createItem(itemToCraft));
+                    if(!item.usable)
+                    {
+                        stock.stocks.Remove(item);
+                    }
                 }
             }
         }
     }
 
-    public class resourceSite
+    public class ItemShop : Business
     {
+        public double RANDOM_SALES = 0.6;
 
+        public void randomSales()
+        {
+            foreach(it.Stock stock in this.stocks)
+            {
+                if(stock.willSell && this.rnd.NextDouble() <= RANDOM_SALES && this.employees.Count > 0)
+                {
+                    stock.stocks.RemoveAt(0);
+                    this.money += stock.item.cost;
+                }
+            }
+        }
     }
 
-    public class Road 
+    public class Crafter : Business
+    {
+        public void craftAll()
+        {
+            foreach(it.Stock stock in this.stocks)
+            {
+                if(stock.willCraft && stock.stocks.Count < stock.maxStock)
+                {
+                    foreach(Tuple<string,int> pair in stock.item.toCraft)
+                    {
+                        if (this.stockCount(pair.Item1) >= pair.Item2 && this.employees.Count > 0) 
+                        {
+                            for (int i = 1; i <= pair.Item2; i++)
+                            {
+                                this.destoryStock(pair.Item1);
+                            }
+                            stock.stocks.Add(it.createItem(stock.item.itemType));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    public class Harvester : Business
+    {
+        public void harvest()
+        {
+            //FIXME: don't leave this hard coded to ore
+            Random rnd = new Random();
+
+            foreach (it.Stock stock in this.stocks)
+            {
+                if (stock.stocks.Count <= stock.maxStock && stock.stocks.Count <= stock.minStock && this.employees.Count > 0)
+                {
+                    if (rnd.NextDouble() <= this.city.region.bounty){
+                        stock.stocks.Add(it.createResource("Iron Ore"));
+                    }
+                }
+            }
+        }
+    }
+
+    public class Road
     {
         public string desc;
         public bool known;
-        public int length; 
+        public int length;
         public int roughness;
         //public object travellers; todo: add back in maybe
         public string roadType;
         public City source;
         public City target;
-        
+
         public Road(
             City source,
             City target,
-            string desc, 
-            bool known, 
-            int length, 
-            int roughness, 
+            string desc,
+            bool known,
+            int length,
+            int roughness,
             string roadType)
         {
             this.source = source;
@@ -298,16 +543,17 @@ public static class worlds {
             this.roughness = roughness;
         }
     }
-    
-    public class shoppingBag {
+
+    public class shoppingBag
+    {
         public List<object> entities;
         public object holding;
         public object item;
         public object wants;
-        
-        public shoppingBag(object item, 
-            int holding, 
-            int wants) 
+
+        public shoppingBag(object item,
+            int holding,
+            int wants)
         {
             this.item = item;
             this.holding = holding;
@@ -315,8 +561,14 @@ public static class worlds {
             this.entities = new List<object>();
         }
     }
-    
-    public class craft {
+
+    public class Job
+    {
+
+    }
+
+    public class craft : Job
+    {
         public List<object> craftMatProgress;
         public List<object> craftMatsApplied;
         public object homeShop;
@@ -326,7 +578,7 @@ public static class worlds {
         public object skill;
         public object status;
         public object worker;
-    
+
         public craft(
             int jobID,
             object worker,
@@ -334,7 +586,7 @@ public static class worlds {
             object quantity,
             object item,
             string status,
-            object skill) 
+            object skill)
         {
             this.jobID = jobID;
             this.worker = worker;
@@ -348,8 +600,8 @@ public static class worlds {
             this.skill = skill;
         }
     }
-    
-    public class shoppingTrip 
+
+    public class shoppingTrip : Job
     {
         public object distance;
         public object homeShop;
@@ -361,7 +613,7 @@ public static class worlds {
         public object status;
         public object wagon;
         public object worker;
-        
+
         public shoppingTrip(
             int jobID,
             object worker,
@@ -372,7 +624,7 @@ public static class worlds {
             shoppingBag wagon,
             object item,
             bool returning,
-            string status = "inactive") 
+            string status = "inactive")
         {
             this.jobID = jobID;
             this.worker = worker;
@@ -387,18 +639,19 @@ public static class worlds {
             this.status = status;
         }
     }
-    
-    public class harvest {
+
+    public class harvest : Job
+    {
         public object homeShop;
         public object item;
         public object jobID;
         public string status;
         public object worker;
-        
-        public harvest(int jobID, 
-            object worker, 
-            object homeShop, 
-            object item) 
+
+        public harvest(int jobID,
+            object worker,
+            object homeShop,
+            object item)
         {
             this.jobID = jobID;
             this.worker = worker;
@@ -407,8 +660,8 @@ public static class worlds {
             this.status = "inactive";
         }
     }
-    
-    public static string randomName(string type ="") 
+
+    public static string randomName(string type = "")
     {
         var name = "";
         Random rnd = new Random();
@@ -442,8 +695,10 @@ public static class worlds {
             "O",
             "Y"
         };
-        if (type == "city" || 1==1) { //TODO: Make different random name types
-            foreach (var i in Enumerable.Range(0, rnd.Next(2, 4))) {
+        if (type == "city" || 1 == 1)
+        { //TODO: Make different random name types
+            foreach (var i in Enumerable.Range(0, rnd.Next(2, 4)))
+            {
                 name += cnsnnts[rnd.Next(cnsnnts.Count - 1)] + oe[rnd.Next(oe.Count - 1)];
             }
         }
@@ -452,7 +707,7 @@ public static class worlds {
         return ti.ToTitleCase(name.ToLower());
     }
 
-    public static World buildWorld(int worldSize, int numCities, int infestation) 
+    public static World buildWorld(int worldSize, int numCities, int infestation)
     {
         //TODO: alternate worlds?
 
@@ -462,18 +717,18 @@ public static class worlds {
         for (int i = 0; i < numCities; i++)
         {
             //web.addNewRegion();
-            
+
             //performs full build and construction of city and places it in the world.
             web.addNewCity();
         }
 
         int roadCount = 0;
         //TODO: detect crossroads and create trade post there somehow
-        foreach(City startcity in web.cities)
-        {   
+        foreach (City startcity in web.cities)
+        {
             roadCount = 0;
-            while(roadCount < 1)
-            { 
+            while (roadCount < 1)
+            {
                 string closestCityName = "";
 
                 double dist = 999999;
@@ -481,12 +736,12 @@ public static class worlds {
                 int x1 = startcity.location[0];
                 int y1 = startcity.location[1];
 
-                foreach(City checkcity in web.cities)
+                foreach (City checkcity in web.cities)
                 {
                     int x2 = checkcity.location[0];
                     int y2 = checkcity.location[1];
-                    double checkdist = Math.Sqrt((x1-x2)*(x1-x2)+(y1-y2)*(y1-y2));
-                    if (checkdist < dist && checkdist > 0 && web.findRoad(startcity.name,checkcity.name)==null)
+                    double checkdist = Math.Sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+                    if (checkdist < dist && checkdist > 0 && web.findRoad(startcity.name, checkcity.name) == null)
                     {
                         closestCityName = checkcity.name;
                         dist = checkdist;
@@ -498,18 +753,18 @@ public static class worlds {
                 //2 find home's 4 closest neightbors
                 //3 check if roads do not exist between them and home
                 //4 check that each nieghbor is not beween another nieghbor and home
-                    //4A draw box around neighbor
-                    //connect each corner of the box to home
-                    //if neighbor exists within that drawn figure, do not draw road to far neighbor
-                    //4B list all neighbors, sort by distance.
-                    // From closest, check...
-                    // road does not already exist
-                    // road is not within the same Math.Atan2 +- 15degrees of another closer city
-                    // if so, draw raod
+                //4A draw box around neighbor
+                //connect each corner of the box to home
+                //if neighbor exists within that drawn figure, do not draw road to far neighbor
+                //4B list all neighbors, sort by distance.
+                // From closest, check...
+                // road does not already exist
+                // road is not within the same Math.Atan2 +- 15degrees of another closer city
+                // if so, draw raod
                 //5 draw roads which meet those requirements
 
                 City targetCity = web.findCity(closestCityName);
-                Road newRoad = web.addNewRoad(startcity,targetCity);
+                Road newRoad = web.addNewRoad(startcity, targetCity);
 
                 if (newRoad != null)
                 {
@@ -521,11 +776,11 @@ public static class worlds {
 
         var w = new StreamWriter("worldplot.csv");
 
-        foreach(City city in web.cities)
+        foreach (City city in web.cities)
         {
-            var line = city.name+","+city.location[0]+","+city.location[1]+",";
+            var line = city.name + "," + city.location[0] + "," + city.location[1] + ",";
 
-            foreach(City cityList in city.allRoadsOut())
+            foreach (City cityList in city.findAllNeighbors())
             {
                 line += (cityList.name + ",");
             }
@@ -537,7 +792,7 @@ public static class worlds {
 
         Console.WriteLine("Done Build World");
         return web;
-        
+
     }
 
     public static void populateWorld()
@@ -547,7 +802,7 @@ public static class worlds {
         double range = 0.25;
         int exp = 3;
 
-        double num = Math.Pow(main.numberOfCities,exp);
+        double num = Math.Pow(main.numberOfCities, exp);
         int lownum = Convert.ToInt32(num * (1 - range));
         int hinum = Convert.ToInt32(num * (1 + range));
 
@@ -557,10 +812,10 @@ public static class worlds {
         {
             pe.newPerson();
         }
-        
+
     }
 
-    
+
     /*
 
         /// FIXME: web = t.createCalendar(web);
@@ -696,8 +951,8 @@ public static class worlds {
         */
 
 
-    
-    
+
+
     /*
     public static void fillEmptySources(object web) {
         foreach (var y in web.nodes) {

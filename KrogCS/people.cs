@@ -29,6 +29,8 @@ public class people {
         //public job job;              
         public string name;      
         public w.City location;    
+        public int money;
+        public w.Business jobSite;
         //public object personType;        
         //public object status;        
         //public int wallet;

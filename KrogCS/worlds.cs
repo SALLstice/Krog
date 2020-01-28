@@ -13,11 +13,14 @@ using System.Linq;
 using System.IO;
 using pe = people;
 //using Microsoft.Msagl;
+using System.Diagnostics;
 
 public static class worlds
 {
     public class World
     {
+        
+        public bool BOUNTIFUL = false; //for debugging: sets all regions to harvest every hour
         public List<Region> regions = new List<Region>();
         public List<City> cities = new List<City>();
         public List<Road> roads = new List<Road>();
@@ -29,7 +32,8 @@ public static class worlds
         public List<Barracks> barracks = new List<Barracks>();
         public List<it.Item> items = new List<it.Item>();
         public List<it.Item> artifacts = new List<it.Item>();
-
+        public List<Job> jobs = new List<Job>();
+        public Stopwatch sw = new Stopwatch();
         public void coverWithRegions()
         {
             for (int x = 0; x <= main.worldSize; x++)
@@ -54,7 +58,7 @@ public static class worlds
 
             region.name = "The " + randomName() + " " + region.type;
 
-            region.bounty = rnd.NextDouble();
+            region.bounty = BOUNTIFUL ? 1 : rnd.NextDouble();
 
             //TODO: Create regions then populate with cities?
             // Or drop cities randomly then section grid into regions?
@@ -67,7 +71,7 @@ public static class worlds
         public void addNewCity()
         {
             City newCity = buildNewCity();
-            newCity.taxes = 5;
+            newCity.taxes = 300;
             newCity.money = 400;
             
             newCity.addShop("Weapon Shop");
@@ -149,6 +153,32 @@ public static class worlds
         {
             for (int time = 1; time <= hoursPassed; time++)
             {
+                //sw.Start();
+                foreach(pe.Person person in this.people)
+                {
+                    if(person.equippedWeapon != null && !person.equippedWeapon.usable){
+                        person.inventory.Add(person.equippedWeapon);
+                        person.equippedWeapon = null;
+                    }
+
+                    if(person.equippedWeapon == null)
+                    {
+                        foreach(Business shop in person.location.businesses)
+                        {
+                            if (shop.stockCount("Dagger") > 0 && person.money >= 20) //FIXME: dont hardcode
+                            {
+                                person.equippedWeapon = shop.giveItem("Dagger");
+                                person.money -= 20;
+                                shop.money += 20;
+                            }
+                        }
+                    }
+                }
+                //sw.Stop();
+                //Console.WriteLine("person : " + sw.ElapsedMilliseconds);
+                //sw.Reset();
+
+                //sw.Start();
                 foreach(Business business in this.businesses)
                 {
                     business.checkAndHireRandomEmployee();
@@ -156,20 +186,30 @@ public static class worlds
                     if(time % 24 == 0){
                         business.payEmployees();
                     }
-
-                    if(time % 168 == 0)
-                    {
-                        business.payTaxes();
-                    }
                 }
+                //sw.Stop();
+                //Console.WriteLine("business : " + sw.ElapsedMilliseconds);
+                //sw.Reset();
 
+                //sw.Start();
                 foreach(ItemShop itemShop in this.shops)
                 {
                     itemShop.randomSales();
+                    
+                    if(time % 168 == 0)
+                    {
+                        itemShop.payTaxes();
+                    }
                 }
-
+                //sw.Stop();
+                //Console.WriteLine("itemShop : " + sw.ElapsedMilliseconds);
+                //sw.Reset();
+                
+                //sw.Start();
                 foreach (Crafter crafter in this.crafters)
                 {
+                    crafter.tradeAwayItem();
+
                     foreach (it.Stock stock in crafter.stocks)
                     {
                         if (stock.willCraft && stock.stocks.Count <= stock.maxStock)
@@ -178,37 +218,69 @@ public static class worlds
                         }
                     }
                     
-                    crafter.tradeAwayItem();
-                }
-
-                foreach(var harvester in this.harvesters)
-                {
-                    harvester.harvest();
-                    harvester.tradeAwayItem();
-                }
-                
-                foreach(Barracks barracks in this.barracks)
-                {
                     if(time % 168 == 0)
                     {
-                        int BARRACKS_EARNINGS = 100; //FIXME: Just for testing
-
-                        barracks.city.money -= BARRACKS_EARNINGS;
-                        barracks.money += BARRACKS_EARNINGS;
+                        crafter.payTaxes();
                     }
+                }
+                //sw.Stop();
+                //Console.WriteLine("crafter : " + sw.ElapsedMilliseconds);
+                //sw.Reset();
+                
+                foreach(var harvester in this.harvesters)
+                {
+                    sw.Start();
+                    harvester.tradeAwayItem();
+                    sw.Stop();
+                    Console.WriteLine("harvester trade : " + sw.ElapsedMilliseconds);
+                    sw.Reset();
+                    sw.Start();
+                    harvester.harvest();
+                    sw.Stop();
+                    Console.WriteLine("harvester harvest : " + sw.ElapsedMilliseconds);
+                    sw.Reset();
+                    
+                    if(time % 168 == 0)
+                    {
+                        harvester.payTaxes();
+                    }
+                }
+                                
+                //sw.Start();
+                foreach(Barracks barracks in this.barracks)
+                {
+                    barracks.findAndBuyItem("Dagger");
 
                     foreach(pe.Person guard in barracks.employees)
                     {
                         guard.equippedWeapon = barracks.giveItem("Dagger");
                     }
-                }
 
-                foreach(var item in this.items)
+                    if(time % 168 == 0)
+                    {
+                        int BARRACKS_EARNINGS = 500;
+                        
+                        if(barracks.city.money >= BARRACKS_EARNINGS){
+                            barracks.city.money -= BARRACKS_EARNINGS;
+                            barracks.money += BARRACKS_EARNINGS;
+                        }
+                    }
+                }
+                //sw.Stop();
+                //Console.WriteLine("barracks : " + sw.ElapsedMilliseconds);
+                //sw.Reset();
+                
+                //sw.Start();
+                foreach(it.Item item in this.items)
                 {
                     item.naturalWear();
                     item.ageItem();
                 }
-
+                //sw.Stop();
+                //Console.WriteLine("item : " + sw.ElapsedMilliseconds);
+                //sw.Reset();
+                
+                //sw.Start();
                 foreach(City city in this.cities)
                 {
                     city.GDP = 0;
@@ -217,6 +289,27 @@ public static class worlds
                         city.GDP += shop.money;
                     }
                 }
+                //sw.Stop();
+                //Console.WriteLine("city : " + sw.ElapsedMilliseconds);
+                //sw.Reset();
+                            
+                sw.Start();
+                foreach(Craft craftingJob in this.jobs.ToList())
+                {
+                    if(craftingJob.timeRemaining > 0)
+                    {
+                        craftingJob.timeRemaining--;
+                    }
+
+                    if(craftingJob.timeRemaining <= 0)
+                    {
+                        craftingJob.craftComplete();
+                    }
+                }
+                sw.Stop();
+                Console.WriteLine("craftingJob : " + sw.ElapsedMilliseconds);
+                sw.Reset();
+                            
             }
         }
     }
@@ -239,7 +332,6 @@ public static class worlds
         public World world;
         public int money;
         public int GDP;
-        public int guardPay;
         public int taxes;
 
         public List<City> findAllNeighbors()
@@ -274,7 +366,7 @@ public static class worlds
                     newShop.money = rnd.Next(100,300);
                     newShop.payRate = 2;
                     newShop.maxWorkers = 2;
-                    newShop.upsell = 0.2; //percentage increase
+                    newShop.upsell = 1; //percentage increase; 1 doubles the cost
 
                     this.world.businesses.Add(newShop);
                     this.world.shops.Add(newShop);
@@ -285,10 +377,10 @@ public static class worlds
                 case "Blacksmith":
                     Crafter blacksmith = new Crafter();
 
-                    blacksmith.newStock("Dagger", 3, 5, false, true, true,false, false);
-                    blacksmith.newStock("Iron Ore", 20,50, true,false,false,false, false);
+                    blacksmith.newStock("Dagger", 1, 5, false, true, true,false, false);
+                    blacksmith.newStock("Iron Ore", 4, 10, true,false,false,false, false);
                     blacksmith.money = rnd.Next(100,200);
-                    blacksmith.payRate = 2;
+                    blacksmith.payRate = 5;
                     blacksmith.maxWorkers = 3;
                     blacksmith.upsell = 0.1;
 
@@ -301,10 +393,10 @@ public static class worlds
                 case "Mine":
                     Harvester newMine = new Harvester();
 
-                    newMine.newStock("Iron Ore", 5, 50,false,true,false,true, false);
+                    newMine.newStock("Iron Ore", 0, 50,false,true,false,true, false);
                     newMine.money = rnd.Next(100,200);
-                    newMine.payRate = 1;
-                    newMine.maxWorkers = 10;
+                    newMine.payRate = 3;
+                    newMine.maxWorkers = 6;
 
                     this.world.businesses.Add(newMine);
                     this.world.harvesters.Add(newMine);
@@ -315,9 +407,9 @@ public static class worlds
                 case "Barracks":
                     Barracks barracks = new Barracks();
 
-                    barracks.newStock("Dagger", 5, 10,true,false,false,false, false);
+                    barracks.newStock("Dagger", 3, 6,true,false,false,false, false);
                     barracks.money = rnd.Next(50,100);
-                    barracks.payRate = 2;
+                    barracks.payRate = 3;
                     barracks.maxWorkers = 3;
 
                     this.world.businesses.Add(barracks);
@@ -372,15 +464,16 @@ public static class worlds
         public Random rnd = new Random();
         public int payRate;
         public double upsell;
+        public List<Job> jobs = new List<Job>();
 
         public void checkAndHireRandomEmployee()
         {
             if(this.employees.Count < this.maxWorkers && this.money >= this.payRate)
             {                
                 foreach(pe.Person newWorker in this.city.residents){
-                    if (newWorker.jobSite == null)
+                    if (newWorker.employer == null)
                     {
-                        newWorker.jobSite = this;
+                        newWorker.employer = this;
                         this.employees.Add(newWorker);
 
                         break;
@@ -401,7 +494,7 @@ public static class worlds
                 else
                 {
                     this.employees.Remove(employee);
-                    employee.jobSite = null;
+                    employee.employer = null;
                 }
             }
         }
@@ -448,13 +541,13 @@ public static class worlds
         {
             foreach (it.Stock neighborstock in neighborshop.stocks)
             {
-                if (neighborstock.stocks.Count < neighborstock.maxStock && neighborshop.money >= neighborstock.item.cost)
+                if (neighborstock.stocks.Count < neighborstock.maxStock && neighborshop.money >= neighborstock.item.cost) //FIXME: use home price with markup
                 {
                     foreach (it.Stock homestock in this.stocks)
                     {
                         if (homestock.item.itemType == neighborstock.item.itemType && homestock.willSell == true)
                         {
-                            if (homestock.stocks.Count >= homestock.minStock)
+                            if (homestock.stocks.Count > 0 && homestock.stocks.Count >= homestock.minStock)
                             {
                                 for (int i = 1; i <= 1; i++)
                                 { //FIXME: make it diff from nieghbor stock. not 1
@@ -464,12 +557,44 @@ public static class worlds
 
                                     neighborshop.money -= Convert.ToInt32(homestock.item.cost * (1 + this.upsell));
                                     this.money += Convert.ToInt32(homestock.item.cost * (1 + this.upsell));
+                                    
                                 }
                             }
                         }
                     }
                 }
             }
+        }
+        //FIXME: Just make a single method for buysell with Buyer and Seller
+        public void findAndBuyItem(string itemType)
+        {
+            foreach(Business shop in this.city.businesses)
+            {
+                var stock = shop.findStock(itemType);
+                if(stock != null)
+                {
+                    if(stock.willSell && stock.stocks.Count > stock.minStock)
+                    {
+                        var homeStock = this.findStock(itemType);
+
+                        homeStock.stocks.Add(shop.giveItem(itemType));
+                        shop.money += stock.item.cost;
+                        this.money -= stock.item.cost;
+                    }
+                }
+            }
+        }
+
+        public it.Stock findStock(string itemType)
+        {
+            foreach(it.Stock stock in this.stocks)
+            {
+                if(stock.item.itemType == itemType)
+                {
+                    return stock;
+                }
+            }
+            return null;
         }
 
         public int stockCount(string itemType)
@@ -519,6 +644,18 @@ public static class worlds
             }
             return null;
         }
+
+        public void addItemToStocks(it.Item item)
+        { 
+            foreach(it.Stock stock in this.stocks)
+            {
+                if(stock.item.itemType == item.itemType)
+                {
+                    stock.stocks.Add(item);
+                    break;
+                }
+            }
+        }
     }
 
     public class ItemShop : Business
@@ -546,15 +683,33 @@ public static class worlds
             {
                 if(stock.willCraft && stock.stocks.Count < stock.maxStock)
                 {
-                    foreach(Tuple<string,int> pair in stock.item.toCraft)
+                    foreach(Tuple<string,int> pair in stock.item.materialsToCraft)
                     {
                         if (this.stockCount(pair.Item1) >= pair.Item2 && this.employees.Count > 0) 
                         {
-                            for (int i = 1; i <= pair.Item2; i++)
+                            foreach(pe.Person employee in this.employees)
                             {
-                                this.destoryStock(pair.Item1);
+                                if(employee.job == null)
+                                {
+                                    var newJob = new Craft();
+                            
+                                    newJob.item = stock.item;
+                                    newJob.timeRemaining = stock.item.craftTime;
+                                    newJob.employee = employee;
+                                    newJob.jobSite = this;
+
+                                    employee.job = newJob;
+                                    
+                                    for (int i = 1; i <= pair.Item2; i++)
+                                    {
+                                        newJob.craftingMaterials.Add(this.giveItem(pair.Item1));
+                                    }
+                                    
+                                    this.jobs.Add(newJob);
+                                    this.city.world.jobs.Add(newJob);
+                                    break;
+                                }
                             }
-                            stock.stocks.Add(it.createItem(stock.item.itemType));
                         }
                     }
                 }
@@ -573,8 +728,12 @@ public static class worlds
             {
                 if (stock.stocks.Count <= stock.maxStock && stock.stocks.Count <= stock.minStock && this.employees.Count > 0)
                 {
+                    //var ha = stock.item.harvestAmount; //FIXME: make resource materials a differ ent type of stock?
+
                     if (rnd.NextDouble() <= this.city.region.bounty){
-                        stock.stocks.Add(it.createResource("Iron Ore"));
+                        for(int i = 1; i <= rnd.Next(2,5); i++){  //FIXME: make option by range of resource
+                            stock.stocks.Add(it.createResource("Iron Ore")); //FIXME: Taking too long to run
+                        }
                     }
                 }
             }
@@ -616,122 +775,38 @@ public static class worlds
         }
     }
 
-    public class shoppingBag
-    {
-        public List<object> entities;
-        public object holding;
-        public object item;
-        public object wants;
-
-        public shoppingBag(object item,
-            int holding,
-            int wants)
-        {
-            this.item = item;
-            this.holding = holding;
-            this.wants = wants;
-            this.entities = new List<object>();
-        }
-    }
-
     public class Job
     {
-
+        public Business jobSite;
+        public pe.Person employee;
+        public int timeRemaining;
     }
 
-    public class craft : Job
+    public class Craft : Job
     {
-        public List<object> craftMatProgress;
-        public List<object> craftMatsApplied;
-        public object homeShop;
-        public object item;
-        public object jobID;
-        public object quantity;
-        public object skill;
-        public object status;
-        public object worker;
+        //public List<object> craftMatProgress;
+        //public List<object> craftMatsApplied;
+        public it.Item item;
+        public List<it.Item> craftingMaterials = new List<it.Item>();
+        //public object quantity;
+        //public object skill;
+        //public object status;
 
-        public craft(
-            int jobID,
-            object worker,
-            object homeShop,
-            object quantity,
-            object item,
-            string status,
-            object skill)
+        public void craftComplete()
         {
-            this.jobID = jobID;
-            this.worker = worker;
-            this.homeShop = homeShop;
-            this.status = status;
-            // self.timeRemaining = -1
-            this.quantity = quantity;
-            this.item = item;
-            this.craftMatProgress = new List<object>();
-            this.craftMatsApplied = new List<object>();
-            this.skill = skill;
+            it.Item newItem = it.createItem(this.item.itemType);
+
+                newItem.crafter = this.employee;
+                //newItem.materialsUsed = this.craftingMaterials;
+
+                this.jobSite.addItemToStocks(newItem);
+                this.jobSite.city.world.items.Add(newItem);
+
+                this.employee.job = null;
+                this.jobSite.jobs.Remove(this);
+                this.jobSite.city.world.jobs.Remove(this);
         }
-    }
-
-    public class shoppingTrip : Job
-    {
-        public object distance;
-        public object homeShop;
-        public object item;
-        public object jobID;
-        public object money;
-        public object returning;
-        public object shop;
-        public object status;
-        public object wagon;
-        public object worker;
-
-        public shoppingTrip(
-            int jobID,
-            object worker,
-            object homeShop,
-            object shop,
-            int distance,
-            object money,
-            shoppingBag wagon,
-            object item,
-            bool returning,
-            string status = "inactive")
-        {
-            this.jobID = jobID;
-            this.worker = worker;
-            this.homeShop = homeShop;
-            this.shop = shop;
-            this.distance = distance;
-            this.money = money;
-            this.wagon = wagon;
-            this.item = item;
-            // self.timeRemaining = 0
-            this.returning = returning;
-            this.status = status;
-        }
-    }
-
-    public class harvest : Job
-    {
-        public object homeShop;
-        public object item;
-        public object jobID;
-        public string status;
-        public object worker;
-
-        public harvest(int jobID,
-            object worker,
-            object homeShop,
-            object item)
-        {
-            this.jobID = jobID;
-            this.worker = worker;
-            this.homeShop = homeShop;
-            this.item = item;
-            this.status = "inactive";
-        }
-    }
+    }    
 
     public static string randomName(string type = "")
     {
@@ -862,7 +937,6 @@ public static class worlds
 
         //TODO: if cities are grouped together. Make them a kingdom. Otherwise, they are not part of a state
 
-        Console.WriteLine("Done Build World");
         return web;
 
     }

@@ -4,8 +4,7 @@
 //using r = random;
 //using render = django.shortcuts.render;
 //using g = gui;
-//using it = items;
-
+using it = items;
 using w = worlds;
 using System.Collections.Generic;
 using System.Collections;
@@ -34,6 +33,8 @@ public class people {
         //public object personType;        
         //public object status;        
         //public int wallet;
+        public it.Item equippedWeapon;
+        public it.Item equippedArmor;
         
         public Person(string name="", w.City loc = null) 
         {

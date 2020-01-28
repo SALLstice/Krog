@@ -26,6 +26,7 @@ public static class worlds
         public List<Business> shops = new List<Business>();
         public List<Harvester> harvesters = new List<Harvester>();
         public List<Business> businesses = new List<Business>();
+        public List<Barracks> barracks = new List<Barracks>();
         public List<it.Item> items = new List<it.Item>();
         public List<it.Item> artifacts = new List<it.Item>();
 
@@ -66,11 +67,15 @@ public static class worlds
         public void addNewCity()
         {
             City newCity = buildNewCity();
-            newCity.placeCity(this);
-
+            newCity.taxes = 5;
+            newCity.money = 400;
+            
             newCity.addShop("Weapon Shop");
             newCity.addShop("Blacksmith");
             newCity.addShop("Mine");
+            newCity.addShop("Barracks");
+
+            newCity.placeCity(this);
         }
 
         public City buildNewCity()
@@ -91,7 +96,7 @@ public static class worlds
             var desc2 = lines[rnd.Next(lines.Length)];
             var desc = $"a {desc1}, {desc2}";
 
-            if (findRoad(source.name, target.name) is null)  //FIXME: sometimes this bugs out
+            if (target != null && findRoad(source.name, target.name) is null)  
             {
                 Road newRoad = new Road(source, target, desc, false, 3, 0, type);
                 this.roads.Add(newRoad);
@@ -103,7 +108,6 @@ public static class worlds
             {
                 return null;
             }
-
         }
 
         public City findCity(string name)
@@ -143,15 +147,19 @@ public static class worlds
 
         public void passTime(int hoursPassed)
         {
-
             for (int time = 1; time <= hoursPassed; time++)
             {
                 foreach(Business business in this.businesses)
                 {
                     business.checkAndHireRandomEmployee();
 
-                    if(hoursPassed % 7 == 0){
+                    if(time % 24 == 0){
                         business.payEmployees();
+                    }
+
+                    if(time % 168 == 0)
+                    {
+                        business.payTaxes();
                     }
                 }
 
@@ -179,6 +187,22 @@ public static class worlds
                     harvester.tradeAwayItem();
                 }
                 
+                foreach(Barracks barracks in this.barracks)
+                {
+                    if(time % 168 == 0)
+                    {
+                        int BARRACKS_EARNINGS = 100; //FIXME: Just for testing
+
+                        barracks.city.money -= BARRACKS_EARNINGS;
+                        barracks.money += BARRACKS_EARNINGS;
+                    }
+
+                    foreach(pe.Person guard in barracks.employees)
+                    {
+                        guard.equippedWeapon = barracks.giveItem("Dagger");
+                    }
+                }
+
                 foreach(var item in this.items)
                 {
                     item.naturalWear();
@@ -187,14 +211,13 @@ public static class worlds
 
                 foreach(City city in this.cities)
                 {
-                    city.totalMoney = 0;
+                    city.GDP = 0;
                     foreach(Business shop in city.businesses)
                     {
-                        city.totalMoney += shop.money;
+                        city.GDP += shop.money;
                     }
                 }
             }
-
         }
     }
 
@@ -214,7 +237,10 @@ public static class worlds
         public List<Business> businesses = new List<Business>();
         public Region region;
         public World world;
-        public int totalMoney;
+        public int money;
+        public int GDP;
+        public int guardPay;
+        public int taxes;
 
         public List<City> findAllNeighbors()
         {
@@ -244,10 +270,11 @@ public static class worlds
                 case "Weapon Shop":
                     ItemShop newShop = new ItemShop();
 
-                    newShop.newStock("Dagger", 5, 10, true, false, false, false);
-                    newShop.money = rnd.Next(50,100);
-                    newShop.payRate = 3;
+                    newShop.newStock("Dagger", 2, 4, true, false, false, false,true);
+                    newShop.money = rnd.Next(100,300);
+                    newShop.payRate = 2;
                     newShop.maxWorkers = 2;
+                    newShop.upsell = 0.2; //percentage increase
 
                     this.world.businesses.Add(newShop);
                     this.world.shops.Add(newShop);
@@ -258,11 +285,12 @@ public static class worlds
                 case "Blacksmith":
                     Crafter blacksmith = new Crafter();
 
-                    blacksmith.newStock("Dagger", 3, 5, false, true, true,false);
-                    blacksmith.newStock("Iron Ore", 20,50, true,false,false,false);
-                    blacksmith.money = rnd.Next(50,100);
+                    blacksmith.newStock("Dagger", 3, 5, false, true, true,false, false);
+                    blacksmith.newStock("Iron Ore", 20,50, true,false,false,false, false);
+                    blacksmith.money = rnd.Next(100,200);
                     blacksmith.payRate = 2;
                     blacksmith.maxWorkers = 3;
+                    blacksmith.upsell = 0.1;
 
                     this.world.businesses.Add(blacksmith);
                     this.world.crafters.Add(blacksmith);
@@ -273,8 +301,8 @@ public static class worlds
                 case "Mine":
                     Harvester newMine = new Harvester();
 
-                    newMine.newStock("Iron Ore", 5, 50,false,true,false,true);
-                    newMine.money = rnd.Next(50,100);
+                    newMine.newStock("Iron Ore", 5, 50,false,true,false,true, false);
+                    newMine.money = rnd.Next(100,200);
                     newMine.payRate = 1;
                     newMine.maxWorkers = 10;
 
@@ -282,6 +310,20 @@ public static class worlds
                     this.world.harvesters.Add(newMine);
                     this.businesses.Add(newMine);
                     newMine.city = this;
+                    break;
+
+                case "Barracks":
+                    Barracks barracks = new Barracks();
+
+                    barracks.newStock("Dagger", 5, 10,true,false,false,false, false);
+                    barracks.money = rnd.Next(50,100);
+                    barracks.payRate = 2;
+                    barracks.maxWorkers = 3;
+
+                    this.world.businesses.Add(barracks);
+                    this.world.barracks.Add(barracks);
+                    this.businesses.Add(barracks);
+                    barracks.city = this;
                     break;
 
                 default:
@@ -317,6 +359,7 @@ public static class worlds
             world.cities.Add(this);
             this.location = cityLocation;
         }
+    
     }
 
     public class Business
@@ -328,6 +371,7 @@ public static class worlds
         public int maxWorkers;
         public Random rnd = new Random();
         public int payRate;
+        public double upsell;
 
         public void checkAndHireRandomEmployee()
         {
@@ -362,7 +406,15 @@ public static class worlds
             }
         }
 
-        public void newStock(string itemType, int min, int max, bool willBuy, bool willSell, bool willCraft, bool willHarvest)
+        public void payTaxes()
+        {
+            if (this.money >= this.city.taxes){
+                this.money -= this.city.taxes;
+                this.city.money += this.city.taxes;
+            }
+        }
+
+        public void newStock(string itemType, int min, int max, bool willBuy, bool willSell, bool willCraft, bool willHarvest, bool soldInStore)
         {
             it.Stock newStock = new it.Stock();
             newStock.item = it.createItem(itemType);
@@ -372,6 +424,7 @@ public static class worlds
             newStock.willSell = willSell;
             newStock.willCraft = willCraft;
             newStock.willHarvest = willHarvest;
+            newStock.soldInStore = soldInStore;
             this.stocks.Add(newStock);
         }
 
@@ -409,8 +462,8 @@ public static class worlds
                                     homestock.stocks.RemoveAt(0);
                                     neighborstock.stocks.Add(item);
 
-                                    neighborshop.money -= homestock.item.cost;
-                                    this.money += homestock.item.cost;
+                                    neighborshop.money -= Convert.ToInt32(homestock.item.cost * (1 + this.upsell));
+                                    this.money += Convert.ToInt32(homestock.item.cost * (1 + this.upsell));
                                 }
                             }
                         }
@@ -452,20 +505,34 @@ public static class worlds
                 }
             }
         }
+    
+        public it.Item giveItem(string itemType)
+        {
+            foreach(it.Stock stock in this.stocks)
+            {
+                if(stock.item.itemType == itemType && stock.stocks.Count > 0)
+                {
+                    var item = stock.stocks[0];
+                    stock.stocks.Remove(item);
+                    return item;
+                }
+            }
+            return null;
+        }
     }
 
     public class ItemShop : Business
     {
-        public double RANDOM_SALES = 0.6;
+        public double RANDOM_SALES = 0.3;
 
         public void randomSales()
         {
             foreach(it.Stock stock in this.stocks)
             {
-                if(stock.willSell && this.rnd.NextDouble() <= RANDOM_SALES && this.employees.Count > 0)
+                if(stock.soldInStore && this.rnd.NextDouble() <= RANDOM_SALES && this.employees.Count > 0 && stock.stocks.Count > 0)
                 {
                     stock.stocks.RemoveAt(0);
-                    this.money += stock.item.cost;
+                    this.money += Convert.ToInt32(stock.item.cost * (1 + this.upsell));
                 }
             }
         }
@@ -512,6 +579,11 @@ public static class worlds
                 }
             }
         }
+    }
+
+    public class Barracks : Business
+    {
+
     }
 
     public class Road

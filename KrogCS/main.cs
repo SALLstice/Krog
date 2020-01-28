@@ -15,7 +15,7 @@ using System.IO;
 
 public class main {
     public static int worldSize = 100;
-    public static int numberOfCities = 30;
+    public static int numberOfCities = 3;
     public static int infestation = 1;
 
     public static w.World world = new w.World();
@@ -60,7 +60,7 @@ public class main {
                 world = w.buildWorld(worldSize, numberOfCities, infestation);
                 w.populateWorld();
                 me = pe.newPlayer("Joe");
-                world.passTime(10);
+                world.passTime(1460);
                 /*
                 b.createBoss();
                 w.saveWorldState();

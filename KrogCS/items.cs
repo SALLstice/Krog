@@ -81,12 +81,12 @@ public class items {
         public bool willCraft;
         public List<Item> stocks = new List<Item>();
         public Item item; //FIXME change to object
-        //public int inStock; //fixme use entity list to count stock
         //public object job;
         public int minStock;
         public int maxStock;
         public bool willSell;
         public bool willHarvest;
+        public bool soldInStore;
         //public object source;
         //public object storeStock;
         

@@ -10,13 +10,15 @@ using System.Collections.Generic;
 using System.Collections;
 using System.Linq;
 using System;
+using System.Diagnostics;
 
 public class people {
      
+    
     public class Person 
     {           
         public string name;      
-        public w.City location;    
+        public w.City city;    
         public int money;
         public w.Business employer;
         public w.Job job;
@@ -31,13 +33,13 @@ public class people {
         {
             main.world.people.Add(this); //FIXME Dont point to main world
             loc.residents.Add(this);
-            this.location = loc;
+            this.city = loc;
         }
 
         public void moveLocation(w.City loc)
         {
-            this.location.residents.Remove(this);
-            this.location = loc;
+            this.city.residents.Remove(this);
+            this.city = loc;
         }
         public bool skillCheck(string skill, int DC, int mod = 0) 
         {
@@ -67,7 +69,69 @@ public class people {
                return false;
            }
         }
-    }       
+    
+        public void findEmployment()
+        {
+            if(this.employer == null)
+            {
+                //TODO: find job based on skills
+            }
+        }
+
+        public void paytaxes()
+        {
+            int taxesOwed = Convert.ToInt32(this.money * this.city.taxRate);
+
+            if (this.money >= taxesOwed){
+                this.money -= taxesOwed;
+                this.city.money += taxesOwed;
+            }
+        }
+
+        public void findAndBuyItem(string itemType)
+        {       
+            var supplier = this.findSupplier(itemType);
+            
+            if (supplier != null){
+                var sellerStock = supplier.findStock(itemType);
+                var boughtItem = supplier.giveItem(itemType);
+
+                this.money -= boughtItem.cost;
+                supplier.money += boughtItem.cost;
+            }
+        }
+
+        public w.Business findSupplier(string itemType)
+        {
+            foreach(w.Business shopAroundTown in this.city.businesses)
+            {
+                foreach(it.Stock stock in shopAroundTown.stocks)
+                {
+                    if(stock.item.itemType == itemType && stock.willSell && stock.stocks.Count > 0)
+                    {
+                        return shopAroundTown;
+                    }
+                }
+            }
+
+            foreach (w.City neighbor in this.city.findAllNeighbors())
+            {
+                foreach (w.Business neighborshop in neighbor.businesses)
+                {
+                    foreach(it.Stock stock in neighborshop.stocks)
+                    {
+                        if(stock.item.itemType == itemType && stock.willSell && stock.stocks.Count > 0)
+                        {
+                            return neighborshop;
+                        }
+                    }
+                }
+            }
+            return null;
+        }
+         
+    }
+
     public class Player : Person
     {
         
@@ -115,6 +179,7 @@ public class people {
         Person newb = new Person();
 
         newb.name = w.randomName("city");
+        newb.money = 5000;
         newb.placeInWorld(main.world.randomCity());
 
         return newb;

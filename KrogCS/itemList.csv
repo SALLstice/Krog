@@ -14,7 +14,7 @@ Ale,consume,1,1,3,poison,0,,,,"",True,,[],,,,brewing,,true,""
 Dagger,weapon,5,1,1,,,Iron Ore-2,,,"",True,,"[[16, 2]]",,3,,blacksmithing,,true,true
 Noxious Elixir,consume,500,1,20,poison,60,2 6,,,"",True,,"[6, 2]",,,,alchemy,,true,""
 Healing Potion,consume,700,1,,heal,,2 5,,,"",True,,[],,,,alchemy,,true,""
-Iron Ore,material,1,,,,,,,,2:5,,True,[],5,0,,mining,,false,false
+Iron Ore,material,2,,,,,,,,2:5,,True,[],5,0,,mining,,false,false
 Wood,material,1,,,,,,,,"",,True,[],4,,,lumberjacking,,false,""
 Cloth,material,3,,,,,,,,"",,,"[19, 3]",,,,weaving,,true,""
 Thread,material,1,,,,,,,,"",,,[],,,,spinning,,true,""

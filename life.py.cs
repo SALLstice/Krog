@@ -1,4 +1,4 @@
-
+/*
 using time;
 
 using System;
@@ -242,3 +242,4 @@ public static class life {
     
     public static int totalCost = quantityToBuy * i.item.cost;
 }
+*/

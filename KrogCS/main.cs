@@ -16,7 +16,7 @@ using System.Diagnostics;
 
 public class main {
     public static int worldSize = 100;
-    public static int numberOfCities = 20;
+    public static int numberOfCities = 5;
     public static int infestation = 1;
     public static w.World world = new w.World();
     public static pe.Player me = new pe.Player();
@@ -75,7 +75,7 @@ public class main {
 
                 Console.Write("Simulating World... ");
                 sw.Start();
-                world.passTime(10, "year");
+                world.passTime(1, "year");
                 sw.Stop();
                 Console.Write("Done in ");
                 Console.Write(sw.ElapsedMilliseconds);

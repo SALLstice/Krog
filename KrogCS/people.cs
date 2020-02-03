@@ -22,8 +22,8 @@ public class people {
         public int money;
         public w.Business employer;
         public w.Job job;
-        public it.Item equippedWeapon;
-        public it.Item equippedArmor;
+        public it.Equipment equippedWeapon;
+        //public it.Item equippedArmor;
         public List<it.Item> inventory = new List<it.Item>();
         public IDictionary<string,int> skills = new Dictionary<string, int>();
         Random rnd = new Random();
@@ -90,7 +90,7 @@ public class people {
 
         public void findAndBuyItem(string itemType)
         {       
-            var supplier = this.findSupplier(itemType);
+            var supplier = this.findItemSupplier(itemType);
             
             if (supplier != null){
                 var sellerStock = supplier.findStock(itemType);
@@ -101,35 +101,28 @@ public class people {
             }
         }
 
-        public w.Business findSupplier(string itemType)
+        public w.Business findItemSupplier(string itemType)
         {
-            foreach(w.Business shopAroundTown in this.city.businesses)
+            foreach(it.Stock stock in this.city.itemShop.stocks)
             {
-                foreach(it.Stock stock in shopAroundTown.stocks)
+                if(stock.item.itemType == itemType && stock.soldInStore && stock.stocks.Count > 0)
                 {
-                    if(stock.item.itemType == itemType && stock.willSell && stock.stocks.Count > 0)
-                    {
-                        return shopAroundTown;
-                    }
+                    return this.city.itemShop;
                 }
             }
-
+            
             foreach (w.City neighbor in this.city.findAllNeighbors())
             {
-                foreach (w.Business neighborshop in neighbor.businesses)
+                foreach(it.Stock stock in neighbor.itemShop.stocks)
                 {
-                    foreach(it.Stock stock in neighborshop.stocks)
+                    if(stock.item.itemType == itemType && stock.soldInStore && stock.stocks.Count > 0)
                     {
-                        if(stock.item.itemType == itemType && stock.willSell && stock.stocks.Count > 0)
-                        {
-                            return neighborshop;
-                        }
+                        return neighbor.itemShop;
                     }
                 }
             }
             return null;
         }
-         
     }
 
     public class Player : Person

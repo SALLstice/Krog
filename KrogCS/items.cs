@@ -8,7 +8,7 @@ using w = worlds;
 public class items {
     
     public static Frame<string, string> itemList = Frame.ReadCsv("itemList.csv").IndexRows<string>("itemType");
-    public static double WEAR_RATE = 0.1;
+    public static double WEAR_RATE = 1;
     public static int ARTIFACT_AGE = 3000;
     public static double RANDOM_USE = 0.3;
     public static Random rnd = new Random();
@@ -20,27 +20,42 @@ public class items {
         public int cost;
         public List<Tuple<string,int>> materialsToCraft = new List<Tuple<string,int>>();
         public List<Item> materialsUsed = new List<Item>();
+        public int craftTime;
+        //public List<Tuple<string,int>> materialsToCraft = new List<Tuple<string,int>>();
+        //public List<Item> materialsUsed = new List<Item>();
+        //public int wear;
+        //public bool wears;
+        //public bool usable = true;
+        //public int age = 0;
+        //public bool artifact = false;
+        //public bool canBeArtifact;
+        //public people.Person crafter;
+        //public int craftTime;
+        //public people.Person wielder;
+    }
+
+    public class Equipment : Item
+    {
+        
         public int wear;
-        public bool wears;
         public bool usable = true;
         public int age = 0;
         public bool artifact = false;
-        public bool canBeArtifact;
         public people.Person crafter;
-        public int craftTime;
+        
         public people.Person wielder;
 
         public void naturalWear()
         {
-            if (this.wears){
+            
                 var randnum = items.rnd.NextDouble();
 
                 if (randnum <= items.WEAR_RATE && !this.artifact)
                 {
-                    this.wear++;
+                    this.wear += 100; //FIXME: For testing
                     this.checkWear();
                 }
-            }
+            
         }
 
         public void checkWear()
@@ -55,16 +70,15 @@ public class items {
         {
             this.age++;
 
-            if(this.age >= ARTIFACT_AGE && this.usable && this.canBeArtifact && this.artifact == false)
+            if(this.age >= ARTIFACT_AGE && this.usable && this.artifact == false)
             {
                 this.artifact = true;
                 main.world.artifacts.Add(this);
             }
         }
-
         public void simulateRandomUse()
         {
-            if (this.wears){
+            
                 var randnum = items.rnd.NextDouble();
 
                 if (randnum <= items.RANDOM_USE && !this.artifact)
@@ -72,7 +86,7 @@ public class items {
                     this.wear++;
                     this.checkWear();
                 }
-            }
+            
         }
     }
 
@@ -85,7 +99,7 @@ public class items {
     {    
         public bool willBuy;   
         public bool willCraft;
-        public List<Item> stocks = new List<Item>();
+        public List<dynamic> stocks = new List<dynamic>();
         public Item item; 
         //public object job;
         public int minStock;
@@ -96,30 +110,67 @@ public class items {
         public w.Business supplier;
         //public object source;
         //public object storeStock;
-        
+
         public void startingStock(int num)
         {
-            for(int i = 1; i <= num; i++){
-                Item newItem = createItem(this.item.itemType);
-                this.stocks.Add(newItem);
+            if(this.item is items.Equipment)
+            {
+                for(int i = 1; i <= num; i++){
+                    Item newItem = createItem(this.item.itemType);
+                    this.stocks.Add(newItem);
+                }
+            }
+            else if(this.item is items.Resource)
+            {
+                for(int i = 1; i <= num; i++){
+                    Resource newResource = createResource(this.item.itemType);
+                    this.stocks.Add(newResource);
+                }
             }
         }
     }
 
     public static Item createItem(string itemType)
     {   
-        var newItem = new Item();
-
-        newItem.itemType = itemType;
         var series = itemList.GetRow<string>(itemType);
+        var use = Convert.ToString(series["use"]);
+        
+        switch(use){
+            case "weapon":
+            case "armor":
+                Equipment newEquipment = createEquipment(itemType);
+                return newEquipment;
+            case "resource":
+                Resource newResource = createResource(itemType);
+                return newResource;
+            default:
+                return null;
+        }
+        //var newItem = new Item();
 
-        newItem.cost = Convert.ToInt32(series["cost"]);
-        newItem.use = Convert.ToString(series["use"]);
-        newItem.wears = Convert.ToBoolean(series["wears"]);
-        newItem.canBeArtifact = Convert.ToBoolean(series["canBeArtifact"]);
+        
+    }
+
+    public static Equipment createEquipment(string itemType)
+    {
+        var series = itemList.GetRow<string>(itemType);
+        Equipment newEquipment = new Equipment();
+
+        newEquipment.itemType = itemType;
+
+        newEquipment.cost = Convert.ToInt32(series["cost"]);
+        newEquipment.use = Convert.ToString(series["use"]);
         
         if(series["craftTime"] != ""){
-            newItem.craftTime = Convert.ToInt32(series["craftTime"]);
+            
+            var seriesRead = series["craftTime"];
+            var craftTime = 1;
+            if (seriesRead != "True")
+            {
+                craftTime = Convert.ToInt32(seriesRead);
+            }
+
+            newEquipment.craftTime = craftTime;
         }
 
         string raw = Convert.ToString(series["recipe"]);
@@ -130,14 +181,14 @@ public class items {
             {   
                 var newsplit = pair.Split("-");
                 Tuple<string,int> toAdd = new Tuple<string,int>(newsplit[0],Convert.ToInt32(newsplit[1]));
-                newItem.materialsToCraft.Add(toAdd);    
+                newEquipment.materialsToCraft.Add(toAdd);    
             }
         }
 
-        return newItem;
+        return newEquipment;
     }
 
-    public static Item createResource(string itemType)
+    public static Resource createResource(string itemType)
     {
         
         var newItem = new Resource();
@@ -147,8 +198,6 @@ public class items {
         
         newItem.cost = Convert.ToInt32(series["cost"]);
         newItem.use = Convert.ToString(series["use"]);
-        newItem.wears = Convert.ToBoolean(series["wears"]);
-        newItem.canBeArtifact = Convert.ToBoolean(series["canBeArtifact"]);
 
         string raw = Convert.ToString(series["harvestRange"]);
         string[] rawsplit = raw.Split(":");

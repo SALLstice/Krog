@@ -15,8 +15,8 @@ using System.IO;
 using System.Diagnostics;
 
 public class main {
-    public static int worldSize = 100;
-    public static int numberOfCities = 5;
+    public static int worldSize = 1000;
+    public static int numberOfCities = 30;
     public static int infestation = 1;
     public static w.World world = new w.World();
     public static pe.Player me = new pe.Player();
@@ -67,7 +67,7 @@ public class main {
 
                 Console.Write("Populating World... ");
                 sw.Start();
-                w.populateWorld();
+                w.populateWorldWithPeople();
                 sw.Stop();
                 Console.Write("Done in ");
                 Console.Write(sw.ElapsedMilliseconds);
@@ -75,11 +75,23 @@ public class main {
 
                 Console.Write("Simulating World... ");
                 sw.Start();
-                world.passTime(1, "year");
+                world.passTime(2, "week");
                 sw.Stop();
                 Console.Write("Done in ");
                 Console.Write(sw.ElapsedMilliseconds);
                 Console.WriteLine(" milliseconds.");
+
+                Console.WriteLine("Monsters Appear... ");
+                sw.Start();
+                w.populateWorldWithMonsters();
+                
+                Console.WriteLine("Simulating World... ");
+                world.passTime(1, "day");
+                sw.Stop();
+                Console.Write("Done in ");
+                Console.Write(sw.ElapsedMilliseconds);
+                Console.WriteLine(" milliseconds.");
+                
                 
                 me = pe.newPlayer("Joe");
                 /*
@@ -90,8 +102,6 @@ public class main {
             }
         }
         Console.WriteLine("Done");
-        //g.dispTown();
-        //g.gwin.mainloop();
     }
 
     // todo different race options?

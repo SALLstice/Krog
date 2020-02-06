@@ -8,7 +8,7 @@ using w = worlds;
 public class items {
     
     public static Frame<string, string> itemList = Frame.ReadCsv("itemList.csv").IndexRows<string>("itemType");
-    public static double WEAR_RATE = 1;
+    public static double WEAR_RATE = 0.2;
     public static int ARTIFACT_AGE = 3000;
     public static double RANDOM_USE = 0.3;
     public static Random rnd = new Random();
@@ -52,7 +52,7 @@ public class items {
 
                 if (randnum <= items.WEAR_RATE && !this.artifact)
                 {
-                    this.wear += 100; //FIXME: For testing
+                    this.wear += 100; //FIXME:
                     this.checkWear();
                 }
             
@@ -63,6 +63,8 @@ public class items {
             if (this.wear >= 100)
             {
                 this.usable = false;
+                main.world.items.Remove(this);
+                main.world.history.unusableItems.Add(this);
             }
         }
 
@@ -76,18 +78,7 @@ public class items {
                 main.world.artifacts.Add(this);
             }
         }
-        public void simulateRandomUse()
-        {
-            
-                var randnum = items.rnd.NextDouble();
-
-                if (randnum <= items.RANDOM_USE && !this.artifact)
-                {
-                    this.wear++;
-                    this.checkWear();
-                }
-            
-        }
+        
     }
 
     public class Resource : Item

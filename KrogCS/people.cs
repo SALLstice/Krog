@@ -102,11 +102,9 @@ public class people {
     public class Person : Being
     {           
         public string name;     
-            
         public int money;
         public w.Business employer;
         public w.Job job;
-        
         public it.Item equippedArmor;
         public List<it.Item> inventory = new List<it.Item>();
         public bool hospitalized = false;
@@ -225,7 +223,6 @@ public class people {
     public class Monster : Being
     {
         public string monsterType;
-        
         public int spawnRate;
         public int hunger;
         //public int attackSkill;
@@ -233,7 +230,9 @@ public class people {
         public int generation;
         public int kills = 0;
         public void spawn()
-        {
+        {   //TODO make it that theres one monster that does hte spawning 
+            // and any kills the children get add to the strenth of the spawner
+            // have each monster have a parent attr which they use to evolve the parent
             Monster spawn = newMonster(this.city); 
 
             double EVO_CHANCE = 0.1;

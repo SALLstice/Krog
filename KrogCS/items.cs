@@ -21,6 +21,7 @@ public class items {
         public List<Tuple<string,int>> materialsToCraft = new List<Tuple<string,int>>();
         public List<Item> materialsUsed = new List<Item>();
         public int craftTime;
+        public int baseEffectValue;
         //public List<Tuple<string,int>> materialsToCraft = new List<Tuple<string,int>>();
         //public List<Item> materialsUsed = new List<Item>();
         //public int wear;
@@ -44,6 +45,7 @@ public class items {
         public people.Person crafter;
         
         public people.Person wielder;
+        public int kills;
 
         public void naturalWear()
         {
@@ -134,6 +136,9 @@ public class items {
             case "resource":
                 Resource newResource = createResource(itemType);
                 return newResource;
+            case "food":
+                Item newFood = createFood(itemType);
+                return newFood;
             default:
                 return null;
         }
@@ -150,6 +155,7 @@ public class items {
         newEquipment.itemType = itemType;
 
         newEquipment.cost = Convert.ToInt32(series["cost"]);
+        newEquipment.baseEffectValue = Convert.ToInt32(series["baseEffectValue"]);
         newEquipment.use = Convert.ToString(series["use"]);
         
         if(series["craftTime"] != ""){
@@ -194,6 +200,21 @@ public class items {
         string[] rawsplit = raw.Split(":");
         newItem.harvestRange[0] = Convert.ToInt32(rawsplit[0]);
         newItem.harvestRange[1] = Convert.ToInt32(rawsplit[1]);
+
+        return newItem;
+    }
+
+    public static Item createFood(string itemType)
+    {
+        
+        var newItem = new Item();
+
+        newItem.itemType = itemType;
+        var series = itemList.GetRow<string>(itemType);
+        
+        newItem.cost = Convert.ToInt32(series["cost"]);
+        newItem.use = Convert.ToString(series["use"]);
+
 
         return newItem;
     }

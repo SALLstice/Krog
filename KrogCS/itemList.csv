@@ -1,13 +1,13 @@
 itemType,use,cost,baseEffectValue,secondaryEffectValue,special,specialValue,recipe,harvestTime,harvestDifficulty,harvestRange,craftable,harvestable,craftMats,craftQuantity,craftTime,craftMatsSource,craftSkill,wear,wears,canBeArtifact
 Club,weapon,10,2,0,,0,,,,,True,,"[[17, 1]]",1,,,woodworking,,true,true
 Clothing,armor,0,1,0,,0,,,,,True,,[],1,,,tailoring,,true,
-Short Sword,weapon,100,4,0,,0,,,,,True,,"[16, 3], [17, 1]",1,,,blacksmithing,,true,
+Short Sword,weapon,100,4,0,,0,,,,,True,,"[16, 3], [17, 1]",1,1,,blacksmithing,,true,true
 Padded Armor,armor,200,3,0,,0,,,,,True,,[],,,,leatherworking,,true,
 Healing Herbs,consume,5,0,0,heal,4,,,,,,,[],,,,,,true,
 Krog Guts,consume,2,2,2,poison,0,,1,-10,,,,[],,,,,,false,
 Krog Tooth,consume,10,6,0,,0,,0,10,,,,[],,,,,,false,
 Krog Skin,consume,130,10,0,,0,,4,-40,,,,[],,,,,,false,
-Bread,consume,2,2,3,food,3,,,,,True,,[],,,,baking,,true,
+Bread,food,1,2,3,food,3,,,,,True,,[],,,,baking,,true,
 Wooden Shield,shield,200,2,0,,0,,,,,True,,[],,,,woodworking,,true,
 Leather Armor,armor,800,2,0,,0,,,,,True,,[],,,,leatherworking,,true,
 Ale,consume,1,1,3,poison,0,,,,,True,,[],,,,brewing,,true,
@@ -18,4 +18,5 @@ Iron Ore,resource,2,,,,,,,,2:5,,True,[],5,0,,mining,,false,false
 Wood,resource,1,,,,,,,,,,True,[],4,,,lumberjacking,,false,
 Cloth,resource,3,,,,,,,,,,,"[19, 3]",,,,weaving,,true,
 Thread,resource,1,,,,,,,,,,,[],,,,spinning,,true,
-Plate Mail,armor,100,10,0,,,,,,,True,,"[[16,10]]",1,,,blacksmithing,,true,
+Plate Mail,armor,100,10,0,,,,,,,True,,"[[16,10]]",1,1,,blacksmithing,,true,true
+Natural Armor,armor,0,3,0,"","","","","","","","","",0,0,"","","",false,false

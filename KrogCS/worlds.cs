@@ -23,6 +23,7 @@ public static class worlds
         public bool BOUNTIFUL = false; //for debugging: sets all regions to harvest every hour
         public bool showTime = false;
         public bool showPersonTime = false;
+        public bool monstersSpawed = false;
         public List<Region> regions = new List<Region>();
         public List<City> cities = new List<City>();
         public List<Road> roads = new List<Road>();
@@ -37,7 +38,8 @@ public static class worlds
         public List<it.Item> items = new List<it.Item>();
         public List<it.Item> artifacts = new List<it.Item>();
         public History history = new History();
-        public List<Job> jobs = new List<Job>();
+        public List<Craft> craftingJobs = new List<Craft>();
+        public List<Treatment> treatmentJobs = new List<Treatment>();
         public IDictionary<string,int> datetime = new Dictionary<string,int>();
         public Stopwatch sw = new Stopwatch();
         public void coverWithRegions()
@@ -80,6 +82,8 @@ public static class worlds
             newCity.addShop("Blacksmith");
             newCity.addShop("Mine");
             newCity.addShop("Barracks");
+            newCity.addShop("Hospital");
+            newCity.addShop("Bakery");
 
             newCity.placeCity(this);
         }
@@ -178,7 +182,7 @@ public static class worlds
                 }
             }
         }
-        public string now()
+        public string nowString()
         {
             string now = "";
 
@@ -191,9 +195,20 @@ public static class worlds
             string year = Convert.ToString(this.datetime["Year"]);
             string hour = Convert.ToString(this.datetime["Hour"]);
 
-            now = $"{hour} hour of {day} day of {monthName} month in the year {year}.";
+            now = $"{hour}:00 of day {day} of {monthName} month in the year {year}.";
 
             return now;
+        }
+
+        public int nowInt(){
+            int yearHours = (this.datetime["Year"] - 100) * 8760;
+            int monthHours = (this.datetime["Month"] - 1) * 730;
+            int dayHours = (this.datetime["Day"] - 1) * 24;
+            int hours = (this.datetime["Hour"] - 6);
+
+            int totalHours = yearHours + monthHours + dayHours + hours;
+
+            return totalHours;
         }
         public void passTime(int timePassed, string type)
         {
@@ -226,36 +241,37 @@ public static class worlds
             var buscsv = new StringWriter();
             var busnewLine = "";
 
-            foreach (Business business in this.businesses)
-            {
-                busnewLine += ","+$"{business.city.name}-{business.GetType()}";
-            }
-            foreach (City city in this.cities)
-            {
-                popnewLine += ","+$"{city.name} Humans,"+$"{city.name} Monsters ";
-            }
             
-            popcsv.WriteLine(popnewLine);
-            buscsv.WriteLine(busnewLine);
             
             for (int time = 1; time <= hoursPassed; time++)
             {
-                popnewLine = $"{time}";
-                busnewLine = $"{time}";
+                popnewLine = $"{nowInt()}";
+                busnewLine = $"{nowInt()}";
 
                 if(this.people.Count <= 0)
                 {
                     Console.WriteLine("The world is dead.");
-                    Console.WriteLine(this.now());
+                    Console.WriteLine(this.nowString());
                     
                     popcsv.WriteLine(popnewLine);
-                    File.WriteAllText("Population.csv", popcsv.ToString());
+                    File.AppendAllText("Population.csv", popcsv.ToString());
                     buscsv.WriteLine(busnewLine);
-                    File.WriteAllText("Business.csv", buscsv.ToString());
+                    File.AppendAllText("Business.csv", buscsv.ToString());
 
                     System.Environment.Exit(1);
                 }
+                else if (this.monsters.Count <= 0 && this.monstersSpawed)
+                {
+                    Console.WriteLine("The world is saved.");
+                    Console.WriteLine(this.nowString());
+                    
+                    popcsv.WriteLine(popnewLine);
+                    File.AppendAllText("Population.csv", popcsv.ToString());
+                    buscsv.WriteLine(busnewLine);
+                    File.AppendAllText("Business.csv", buscsv.ToString());
 
+                    System.Environment.Exit(1);
+                }
                 //Each Hour
                 {
                     runClock();
@@ -266,10 +282,7 @@ public static class worlds
                         business.checkAndHireRandomEmployee();
                         business.findSupplyAndBuy();
                     }
-                    foreach (City city in this.cities)
-                    {
-                        
-                    }
+                    
                     
                     foreach (Crafter crafter in this.crafters)
                     {
@@ -293,8 +306,15 @@ public static class worlds
                             guard.checkForSkillIncrease("Dagger");
                         }
                     }
-                    foreach (pe.Person person in this.people)
+                    foreach (pe.Person person in this.people.ToList())
                     {
+                        person.starve();
+                        if(person.hunger <= 500){
+                            if(!person.UseItemFromInventory("Bread")){
+                                person.findAndBuyItem("Bread"); 
+                            }
+                        }
+
                         if (!person.hospitalized){
                             if (person.equippedWeapon != null && !person.equippedWeapon.usable)
                             {
@@ -308,15 +328,19 @@ public static class worlds
                             }
                             if(person.HP < person.maxHP)
                             {
-                                //TODO: Hospitalize
+                                //person.checkIntoHospital();  FIXME: put back in
+                                person.removeFromJob();
+                                person.city.hospital.patients.Add(person);
+                                person.hospitalized = true;
+                            }
+                            if(person.job == null)
+                            {
+                                person.findEmployment();
                             }
                         }
                     }
-                    foreach (it.Item item in this.items)
-                    {
-
-                    }
-                    foreach (Craft craftingJob in this.jobs.ToList())
+                    
+                    foreach (Craft craftingJob in this.craftingJobs.ToList())
                     {
                         if (craftingJob.timeRemaining > 0)
                         {
@@ -328,15 +352,20 @@ public static class worlds
                             craftingJob.craftComplete();
                         }
                     }
-                    foreach(pe.Monster monster in this.monsters.ToList())
+                    foreach(dynamic monster in this.monsters.ToList())
                     {
-                        if(!monster.starve()){
-                            monster.heal();
-                        }
+                        if(!(monster is pe.Spawner)){
+                            if(!monster.starve())
+                            {
+                                if (rnd.NextDouble() <= 0.3){   //TODO: change to monster stat
+                                    monster.heal(1);
+                                }
+                            }
                         
-                        if (rnd.Next(1,50) >= monster.hunger)
-                        {
-                            monster.attackCity();
+                            if (rnd.Next(1,50) >= monster.hunger)
+                            {
+                                monster.attackCity();
+                            }
                         }
                     }
                 }
@@ -347,6 +376,10 @@ public static class worlds
                     {
                         popnewLine += ","+$"{city.residents.Count}";
                         popnewLine += ","+$"{city.monsters.Count}";
+
+                        for(int i = 1; i <= 20; i++){
+                            city.bakery.spawnItemInStock("Bread");
+                        }
                     }
                     foreach (Business business in this.businesses)
                     {
@@ -354,32 +387,36 @@ public static class worlds
 
                         busnewLine += ","+$"{business.money}";
                     }
-                    foreach (Crafter crafter in this.crafters)
-                    {
+                    
 
-                    }
-                    foreach (Harvester harvester in this.harvesters)
-                    {
-
-                    }
                     foreach (Barracks barracks in this.barracks)
                     {
                         barracks.findSupplyAndBuy();
                     }
                     foreach (Hospital hospital in this.hospitals)
                     {
-                        foreach(pe.Person patient in hospital.patients)
-                        {
-                            if(patient.HP < patient.maxHP){
-                                patient.HP++;
-                                //TODO: Make this skill check
-                            }
-                            else
+                        foreach(pe.Person doctor in hospital.employees){
+                            if(doctor.job == null)
                             {
-                                patient.hospitalized = false;
-                                hospital.patients.Remove(patient);
+                                foreach(pe.Person patient in hospital.patients)
+                                {
+                                    if(!patient.underTreatment)
+                                    {
+                                        Treatment treatment = new Treatment();
+                                        treatment.employee = doctor;
+                                        treatment.patient = patient;
+                                        doctor.job = treatment;
+                                        treatment.jobSite = hospital;
+                                        treatment.timeRemaining = 0; //FIXME: maybe?
+                                        patient.underTreatment = true;
+                                        this.treatmentJobs.Add(treatment);
+                                        break;
+                                    }
+                                }
                             }
                         }
+
+                        
                     }
                     foreach (pe.Person person in this.people)
                     {
@@ -390,19 +427,39 @@ public static class worlds
                         item.naturalWear();
                         item.ageItem();
                     }
-                    foreach (Job job in this.jobs)
+                    
+                    foreach(dynamic monster in this.monsters.ToList())
                     {
-
-                    }
-                    foreach(pe.Monster monster in this.monsters.ToList())
-                    {
-                        monster.spawnRate--;
                         monster.age++;
-
-                        if (monster.spawnRate <= 0 && monster.hunger > 100)
+                        
+                        if (monster is pe.Spawner)
                         {
-                            monster.spawn();
+                            pe.Spawner spawner = (pe.Spawner) monster;
+                            spawner.spawnRate--;
+
+                            if (spawner.spawnRate <= 0 && spawner.hunger > 100)
+                            {
+                                spawner.spawn();
+                            }
                         }
+                    }
+
+                    foreach(Treatment treatment in this.treatmentJobs.ToList())
+                    {
+                        if(treatment.patient.HP < treatment.patient.maxHP){
+                            int damageSustained = treatment.patient.maxHP - treatment.patient.HP;
+                            if(treatment.employee.skillCheck("Medical", damageSustained * 100)){
+                                treatment.patient.heal(1);
+                            }                            
+                        }
+                        else
+                        {
+                            treatment.patient.hospitalized = false;
+                            treatment.patient.underTreatment = false;
+                            Hospital treatmentCenter = (Hospital)treatment.jobSite;
+                            treatmentCenter.patients.Remove(treatment.patient);
+                            this.treatmentJobs.Remove(treatment);
+                        }                        
                     }
                 }
 
@@ -411,7 +468,7 @@ public static class worlds
                 {
                     foreach (City city in this.cities)
                     {
-                        int BARRACKS_EARNINGS = 2000;
+                        int BARRACKS_EARNINGS = 1000;
 
                         if (city.money >= BARRACKS_EARNINGS)
                         {
@@ -419,13 +476,16 @@ public static class worlds
                             city.barracks.money += BARRACKS_EARNINGS;
                         }
 
-                        
+                        int HOSPITAL_EARNINGS = 1000;
+
+                        if (city.money >= HOSPITAL_EARNINGS)
+                        {
+                            city.money -= HOSPITAL_EARNINGS;
+                            city.hospital.money += HOSPITAL_EARNINGS;
+                        }
+
                     }
-                    foreach (Business business in this.businesses)
-                    {
-                        
-                        //newLine += ","+$"{business.money}";
-                    }
+                    
                     foreach(ItemShop itemStop in this.shops)
                     {
                         itemStop.payTaxes();
@@ -440,20 +500,8 @@ public static class worlds
                     }
                     foreach (Barracks barracks in this.barracks)
                     {
-                        barracks.payTaxes();
+                        //barracks.payTaxes();
                         //FIXME: maybe?
-                    }
-                    foreach (pe.Person person in this.people)
-                    {
-
-                    }
-                    foreach (it.Item item in this.items)
-                    {
-
-                    }
-                    foreach (Job job in this.jobs)
-                    {
-
                     }
                     
                 }
@@ -461,75 +509,18 @@ public static class worlds
                 //Each Month
                 if (time % 730 == 0)
                 {
-                    foreach (City city in this.cities)
-                    {
-
-                    }
-                    foreach (Business business in this.businesses)
-                    {
-
-                    }
-                    foreach (Crafter crafter in this.crafters)
-                    {
-
-                    }
-                    foreach (Harvester harvester in this.harvesters)
-                    {
-
-                    }
-                    foreach (Barracks barracks in this.barracks)
-                    {
-
-                    }
+                    
                     foreach (pe.Person person in this.people)
                     {
                         person.paytaxes();
                     }
-                    foreach (it.Item item in this.items)
-                    {
-
-                    }
-                    foreach (Job job in this.jobs)
-                    {
-
-                    }
+                    
                 }
 
                 //Each Year
                 if (time % 8760 == 0)
                 {
-                    foreach (City city in this.cities)
-                    {
-
-                    }
-                    foreach (Business business in this.businesses)
-                    {
-
-                    }
-                    foreach (Crafter crafter in this.crafters)
-                    {
-
-                    }
-                    foreach (Harvester harvester in this.harvesters)
-                    {
-
-                    }
-                    foreach (Barracks barracks in this.barracks)
-                    {
-
-                    }
-                    foreach (pe.Person person in this.people)
-                    {
-
-                    }
-                    foreach (it.Item item in this.items)
-                    {
-
-                    }
-                    foreach (Job job in this.jobs)
-                    {
-
-                    }
+                   
                     Console.WriteLine($"Year {time / 8760} Complete.");
                 }
             
@@ -537,8 +528,28 @@ public static class worlds
                 buscsv.WriteLine(busnewLine);
             }
             try{
-                File.WriteAllText("Population.csv", popcsv.ToString());
-                File.WriteAllText("Business.csv", buscsv.ToString());
+                File.AppendAllText("Population.csv", popcsv.ToString());
+                File.AppendAllText("Business.csv", buscsv.ToString());
+
+                var peepcsv = new StringWriter();
+                var peepnewLine = "";
+                foreach(pe.Person person in this.people)
+                {
+                    peepnewLine += $"{person.name},";
+                    peepnewLine += $"{person.HP}--{person.maxHP},";
+                    peepnewLine += $"{person.kills},";
+                    peepnewLine += $"{person.money},";
+                    
+                    foreach(pe.Skill skill in person.skills)
+                    {
+                        peepnewLine += $"{skill.name} {skill.value},";
+                    }
+                    
+                    peepcsv.WriteLine(peepnewLine);
+                    peepnewLine = "";
+                }
+                File.AppendAllText("People.csv", peepcsv.ToString());
+
             }
             catch
             {
@@ -565,6 +576,7 @@ public static class worlds
         public List<pe.Monster> monsters = new List<pe.Monster>();
         public List<Business> businesses = new List<Business>();
         public ItemShop itemShop;
+        public ItemShop bakery;
         public Crafter blacksmith;
         public Hospital hospital;
         public Harvester mine;
@@ -608,6 +620,7 @@ public static class worlds
                     newShop.payRate = 2;
                     newShop.maxWorkers = 2;
                     newShop.upsell = 1; //percentage increase; 1 doubles the cost
+                    //newShop.skillsNeeded.Add();
 
                     this.world.businesses.Add(newShop);
                     this.world.shops.Add(newShop);
@@ -670,12 +683,30 @@ public static class worlds
                     hospital.money = rnd.Next(50, 100);
                     hospital.payRate = 3;
                     hospital.maxWorkers = 3;
+                    hospital.skillsNeeded.Add("Medical");
 
                     this.world.businesses.Add(hospital);
                     this.world.hospitals.Add(hospital);
                     this.hospital = hospital;
                     this.businesses.Add(hospital);
                     hospital.city = this;
+                    break;
+
+                case "Bakery":
+                    ItemShop bakery = new ItemShop();
+
+                    bakery.newItemStock("Bread", 10,20,10,false,false,false,false,true);
+                    bakery.money = rnd.Next(100, 300);
+                    bakery.payRate = 2;
+                    bakery.maxWorkers = 2;
+                    bakery.upsell = 0; //percentage increase; 1 doubles the cost
+                    //newShop.skillsNeeded.Add();
+
+                    this.world.businesses.Add(bakery);
+                    this.world.shops.Add(bakery);
+                    this.bakery = bakery;
+                    this.businesses.Add(bakery);
+                    bakery.city = this;
                     break;
 
                 default:
@@ -731,7 +762,7 @@ public static class worlds
         public int payRate;
         public double upsell;
         public List<Job> jobs = new List<Job>();
-
+        public List<string> skillsNeeded = new List<string>();
         public void findSupplyAndBuy(){
 
             foreach (var stock in this.stocks)
@@ -792,8 +823,15 @@ public static class worlds
             seller.money += boughtItem.cost;
 
             double newCost = boughtItem.cost * (1 + buyer.upsell);
-            boughtItem.cost = Convert.ToInt32(newCost);
-            buyerStock.stocks.Add(boughtItem);
+            try{
+                boughtItem.cost = Convert.ToInt32(newCost);
+                buyerStock.stocks.Add(boughtItem);
+            }
+            catch (System.OverflowException)
+            {
+                //TODO: Make caught items artifacts
+            }
+
         }
 
         public void checkAndHireRandomEmployee()
@@ -948,6 +986,11 @@ public static class worlds
                 }
             }
         }
+
+        public void spawnItemInStock(string itemType){
+            it.Stock stock = findStock(itemType);
+            stock.stocks.Add(it.createItem(itemType));
+        }
     }
     public class ItemShop : Business
     {
@@ -984,7 +1027,7 @@ public static class worlds
                                     }
 
                                     this.jobs.Add(newJob);
-                                    this.city.world.jobs.Add(newJob);
+                                    this.city.world.craftingJobs.Add(newJob);
                                     break;
                                 }
                             }
@@ -1095,8 +1138,13 @@ public static class worlds
 
             this.employee.job = null;
             this.jobSite.jobs.Remove(this);
-            this.jobSite.city.world.jobs.Remove(this);
+            this.jobSite.city.world.craftingJobs.Remove(this);
         }
+    }
+
+    public class Treatment : Job
+    {
+        public pe.Person patient;
     }
     public class History
         {
@@ -1269,7 +1317,7 @@ public static class worlds
         web.datetime.Add("Month", 1);
         web.datetime.Add("Day", 1);
         
-        web.datetime.Add("Hour", 8);
+        web.datetime.Add("Hour", 6);
 
         
         
@@ -1281,7 +1329,7 @@ public static class worlds
         Random rnd = new Random();
 
         double range = 0.7;
-        int exp = 2;
+        double exp = 2.5;
 
         double num = Math.Pow(main.numberOfCities, exp);
         int lownum = Convert.ToInt32(num * (1 - range));
@@ -1297,15 +1345,14 @@ public static class worlds
         
 
     }
-    public static void populateWorldWithMonsters()
+    public static void populateWorldWithSpawnMonsters()
     {
         foreach(City city in main.world.cities)
         {
-            for(int i = 1; i <= rnd.Next(2,5); i++)
-            {
-                pe.newMonster(city);
-            }
+            pe.newSpawnMonster(city);
         }
+
+        main.world.monstersSpawed = true;
     }
 
     public static double findDistanceBetweenCities(City city1, City city2)
@@ -1319,6 +1366,7 @@ public static class worlds
         int y2 = city2.location[1];
 
         distance = Math.Sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
+        distance = Math.Round(distance,1);
 
         return distance;
     }

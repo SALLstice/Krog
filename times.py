@@ -19,25 +19,14 @@ class notableEvent:
         self.extra = extra
 
 
-def createCalendar(web):  # todo make seasons, randomize months and seasons, etc
 
-    setattr(web, 'startingDay', r.randrange(1, 28))
-    setattr(web, 'startingMonth', r.randrange(1, 12))
-    setattr(web, 'startingYear', r.randrange(100, 200))
-
-    setattr(web, 'hour', 8)
-    setattr(web, 'day', web.startingDay)
-    setattr(web, 'month', web.startingMonth)
-    setattr(web, 'year', web.startingYear)
-
-    return web
 
 def now():
-    return f"{w.world.graph['year']:04d}{w.world.graph['month']:02d}{w.world.graph['day']:02d}{w.world.graph['hour']:02d}"
+    return f"{w.world.clock.year:04d}{w.world.clock.month:02d}{w.world.clock.day:02d}{w.world.clock.hour:02d}"
     # str(w.world.graph['year']) + str(w.world.graph['month']) + str(w.world.graph['day']) + str(w.world.graph['hour'])
 
 
-def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungry
+def timePasses(timePassed=1, byThe='hour'):  # TODO player gets sleepy and hungry
     global world
 
     if byThe == 'day':
@@ -49,49 +38,53 @@ def timePasses(timePassed=1, byThe='hour'):  # todo player gets sleepy and hungr
 
     for i in range(timePassed):
         w.runWorld(1)
-        w.world.hour += 1  # time advances 1 hour at a time
-        #pe.me.timeAwake += 1  #todo make this do something
+        w.world.clock.hour += 1  # time advances 1 hour at a time
+        #pe.me.timeAwake += 1  #TODO make this do something
         #pe.me.hunger += 1
 
 
         if b.kingKrog.sleepTimer >= 0:
             b.kingKrog.sleepTimer -= 1
-        elif b.kingKrog.sleepTimer == 0:
-            b.awaken()
+            print(f"Boss sleep timer: {b.kingKrog.sleepTimer}")
+        elif b.kingKrog.sleepTimer == 0: 
+            b.awaken() 
 
-        if b.kingKrog.travelling:
-            b.kingKrog.travelRemaining -= 1
-            if b.kingKrog.travelRemaining <= 0:
-                b.bossArrive()
-        else:
-            b.attackTown()
+        if b.kingKrog.awake:
+            if b.kingKrog.travelling:
+                b.kingKrog.travelRemaining -= 1
+                if b.kingKrog.travelRemaining <= 0:
+                    b.bossArrive()
+            else:
+                b.attackTown()
 
 
         for events in history:  # check history for any events which have to occur now
             if events.datetime == now():
-                doEvent(events)         #todo all of economics has no events
+                doEvent(events)         #TODO all of economics has no events
 
         for j in pe.persons:  # check each person entity if they have a time-based event
             if j.eventTimer == 0:
-                j.eventTimer -= 1  # todo prevent timer from growing infinately
-                # personEvent(j) todo re-add
+                j.eventTimer -= 1  # TODO prevent timer from growing infinately
+                # personEvent(j) TODO re-add
             j.eventTimer = int(j.eventTimer) - 1
 
-        if w.world.hour >= 24:
-            w.world.hour -= 24
-            w.world.day += 1
+        if w.world.clock.hour >= 24:
+            w.world.clock.hour -= 24
+            w.world.clock.day += 1
             newDay()
-        if w.world.day >= 29:
-            w.world.day -= 28
-            w.world.month += 1
+        if w.world.clock.day >= 29:
+            w.world.clock.day -= 28
+            w.world.clock.month += 1
             newMonth()
-        if w.world.month >= 13:
-            w.world.month -= 12
-            w.world.year += 1
+        if w.world.clock.month >= 13:
+            w.world.clock.month -= 12
+            w.world.clock.year += 1
             newYear()
 
-    g.gwin.timeL['text'] = f"Time: {w.world.hour}:00"
-    g.gwin.dateL["text"] = f"Date: {w.world.month}/{w.world.day}/{w.world.year}"
+    w.saveWorld()
+
+    g.gwin.timeL['text'] = f"Time: {w.world.clock.hour}:00"
+    g.gwin.dateL["text"] = f"Date: {w.world.clock.month}/{w.world.clock.day}/{w.world.clock.year}"
 
 def newDay():
     PAY_RATE = 2
@@ -125,7 +118,7 @@ def newDay():
                 print("d")
                 #del i
 
-                #todo weak refs will fix this
+                #TODO weak refs will fix this
     '''
 def newMonth():
     TAXES = 20
@@ -159,7 +152,7 @@ def personEvent(pers):
 
     if pers.eventType == 'awaken':
         print("The entire earth trembles beneath your feet.")
-        pe.persons[pers.entityID].eventTarget = 1  # todo check time passes for ultra krog awake
+        pe.persons[pers.entityID].eventTarget = 1  # TODO check time passes for ultra krog awake
         pe.persons[pers.entityID].eventType = 'destroy'
 
     if pers.eventType == 'destroy':
@@ -170,12 +163,12 @@ def createEvent(datetime, person, event, target, location, extra=0):
     pe.savePlayer()
 
     if target in [o.target for o in history] and event in [p.event for p in
-                                                           history]:  # todo event for items moving, buying/selling/looting
+                                                           history]:  # TODO event for items moving, buying/selling/looting
         w.world.graph['instability'] += 1
 
     history.append(
         notableEvent(datetime, person, event, target, location,
-                     extra))  # todo create event for deal damage to Ultra krog
+                     extra))  # TODO create event for deal damage to Ultra krog
 
 
 def printHistory():

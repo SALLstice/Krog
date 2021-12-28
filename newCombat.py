@@ -92,7 +92,7 @@ def tickUntilTurn():
         for each in baddie.status:
            if each.effect == "slow":
                tempSpeedMod += each.effectValue
-        #todo combine both status checks
+        #TODO combine both status checks
 
         modSpeed = max(1, int(baddie.speed) + tempSpeedMod)
 
@@ -116,7 +116,7 @@ def tickUntilTurn():
             g.setText(label6="")
         else:
             for eff in baddie.status:
-                # todo re-add
+                # TODO re-add
                 if eff.effect == "poison":
                     eff.timedEffect -= 1
                     if eff.timedEffect <= 0:
@@ -150,9 +150,9 @@ def tickUntilStatusClear(monsterStatus):
             if each.statusEffect.effect == "poison":
                 if r.randrange(100) < each.statusEffect.secondaryValue:
                     poisonDamage += r.randrange(int(each.statusEffect.effectValue / 2), each.statusEffect.effectValue)
-            # todo apply damage here
-            # todo check if monster dies
-            # todo option to return to loot
+            # TODO apply damage here
+            # TODO check if monster dies
+            # TODO option to return to loot
 
             each.duration -= 1
             if each.duration < 0:
@@ -174,7 +174,7 @@ def monsterTurn():
     else:
         blocking = 0
 
-    #todo blocking skill
+    #TODO blocking skill
 
     dodgeChance = pe.me.skills.Dodge - int(pe.me.equippedArmor.secondaryEffectValue) + dodging
     hit = r.randrange(100) + baddie.atkMod[atk]
@@ -219,7 +219,7 @@ def playerTurn():
         g.setText(label1="You escape.")
         g.gwin.button0["text"] = "Return to Town"
         g.gwin.button0["command"] = lambda:g.dispTown()
-        #todo re-add tickUntilStatusClear(baddie)
+        #TODO re-add tickUntilStatusClear(baddie)
     else:
         g.setText(label7="Choose your action")
 
@@ -237,6 +237,7 @@ def playerTurn():
         g.gwin.button1["command"] = lambda : defend()
         g.gwin.button2["text"] = "Items"
         g.gwin.button2["command"] = lambda : g.initSelect('combat use:', pe.me, 'inv', 'name', 'use', 'combat')
+        #FIXME cancelling using an item sends you back to town
         g.gwin.button3["text"] = "Tactics"
         g.gwin.button3["command"] = lambda: tactics()
 
@@ -258,7 +259,7 @@ def setAttackType(aT):
     playerTurn()
 
 def attack():
-    # todo put this at top of every func becuase double clicking can double attack
+    # TODO put this at top of every func becuase double clicking can double attack
     g.gwin.button0["command"] = ""
 
     eqWep = pe.me.equippedWeapon
@@ -274,18 +275,23 @@ def attack():
     else:
         attackBonus = 0
 
-    hitChance = attackSkill + eqWep.secondaryEffectValue + attackBonus # - monsterDodge #todo
+    hitChance = attackSkill + eqWep.secondaryEffectValue + attackBonus # - monsterDodge #TODO
 
     damage = 0
 
     g.setText(label1="You attack!")
 
+    #TODO making strong attacks has chance of increasing str.
+    #TODO making quick attacks has chance in incresing TIBS Spd
+
     if r.randrange(100) <= hitChance:
         damage = r.randrange(int(eqWep.baseEffectValue / 2), eqWep.baseEffectValue) + pe.me.strength
         if pe.me.attackType == "S":
             damage += pe.me.strength
+            pe.statBoostCheck("str")
         if pe.me.attackType == "Q":
             damage -= pe.me.strength
+            pe.statBoostCheck("speed")
         g.setText(label2=f"You deal {damage}")
         damageBaddie(damage)
 
@@ -311,12 +317,12 @@ def attack():
         #pe.me.TIBS = 25
         #if pe.me.attackType == "S":
         #    pe.me.TIBS += 10
-        #todo update to UseSkill
+        #TODO update to UseSkill
         if r.randrange(100) >= getattr(pe.me.skills, eqWep.itemType):
             setattr(pe.me.skills, eqWep.itemType, getattr(pe.me.skills, eqWep.itemType) + 1)
             g.setText(label2=f"Your {eqWep.itemType} skill increases to {getattr(pe.me.skills, eqWep.itemType)}!")
 
-            # todo cap at 100
+            # TODO cap at 100
 
     if int(baddie.currentHP) > 0:
         playerTurn()
@@ -367,7 +373,7 @@ def retreat():
     tickUntilTurn()
 
 def killedTheMonster(badd):
-    #todo clear Ticker
+    #TODO clear Ticker
     display = f"You killed the {badd.name}!"
     ti.createEvent(ti.now(),pe.me.name, 'kills',badd, pe.me.location)
     g.setText(label3=display)
@@ -386,14 +392,15 @@ def playerDied():
             os.remove("player.kr")
         
         g.gwin.button0["text"] = "Start New"
-        g.gwin.button0["command"] = "" #todo
+        g.gwin.button0["command"] = "" #TODO
         g.gwin.button1["text"] = "Quit"
         g.gwin.button1["command"] = lambda:g.quitGame()
-        #todo delete player.kr
+        #TODO delete player.kr
 
 def dissect(baddy):
     import items as it
-
+    #TODO combine dissect and loot into single menu
+    #TODO clicking Dissect multiple times kinda works sometimes??
     for each in baddy.addInv:
         testrand = r.randrange(100)
         if pe.skillCheck('Dissection', each.harvestDifficulty):

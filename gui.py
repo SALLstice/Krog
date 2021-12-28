@@ -165,8 +165,9 @@ def updateStatus():
     gwin.eqAcc1L['text'] = f"Acc 1: {pe.me.equippedAcc1.itemType}"
     gwin.eqAcc2L['text'] = f"Acc 2: {pe.me.equippedAcc2.itemType}"
     gwin.locL['text'] = f"{w.world.nodes[pe.me.location]['name']}"
-    gwin.timeL['text'] = f"Time: {w.world['hour']}:00"
-    gwin.dateL['text'] = f"Date: {w.world['month']}/{w.world['day']}/{w.world['year']}"
+    #FIXME clock objects disappears sometimes
+    gwin.timeL['text'] = f"Time: {w.world.clock.hour}:00"
+    gwin.dateL['text'] = f"Date: {w.world.clock.month}/{w.world.clock.day}/{w.world.clock.year}"
 
 def dispTown():
     gwin.button0.grid()
@@ -215,7 +216,7 @@ def setName(text):
                 text += " Jr."
             elif highest > 2:
                 text += " " + str(highest+1)
-            #todo Roman numerals
+            #TODO Roman numerals
 
 
     pe.me.name = text
@@ -230,7 +231,7 @@ def settings():
     gwin.button3["command"] = quitGame
 
 def clearText(skip=[]):
-    for i in range(9):
+    for i in range(10):
         if i not in skip:
             tempstr = "label" + str(i)
             gwin.__dict__[tempstr]["text"] = ""
@@ -319,7 +320,7 @@ def retTo(returnTo):
         pl.arrive()
 
 def select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo):
-    # todo add scrolling functionality
+    # TODO add scrolling functionality
     selectlabel = "label" + str(selection)
     holdlabel = gwin.__dict__[selectlabel]["text"]
     gwin.__dict__[selectlabel]["text"] = f"> {holdlabel}"
@@ -357,7 +358,7 @@ def up(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selectio
         select(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo)
 
 def selectItem(titleDisplay, dispList, holder, list, displayAttr, do, returnTo, selection, sellTo):
-    # todo option to use or drop
+    # TODO option to use or drop
 
     if do == "use":
         it.useItem(pe.me.inv[selection - 1], returnTo)

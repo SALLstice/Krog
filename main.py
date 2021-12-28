@@ -1,7 +1,7 @@
 import os
 
 from django.shortcuts import render
-
+import glob
 import boss as b
 import events as ev
 import gui as g
@@ -12,6 +12,10 @@ import times as t
 import worlds as w
 
 g.init()
+
+if False: #for debugging world building
+    os.remove('world/world.kr')
+    os.remove('player.kr')
 
 if os.path.exists("world/world.kr"):
 
@@ -41,18 +45,21 @@ else:
 
     if worldSize >= 2:
         w.world = w.buildWorld(worldSize, infestation)  # build the world if its big enough
-        pe.createPlayer('human', 0)
         b.createBoss()
         t.timePasses(1000)
         w.saveWorldState()
         w.saveWorld()
+        pe.createPlayer('human', 0)
+        
 
-# todo different race options?
-# todo adult monsters can birth babies
 
-g.dispTown()
+# TODO different race options?
+# TODO adult monsters can birth babies
+    
 g.gwin.mainloop()
 
+if pe.me.name != "":
+    g.dispTown()
 
 def mainlayout(request):
     return render(request, 'krog/layout.html')

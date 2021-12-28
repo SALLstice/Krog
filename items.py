@@ -38,7 +38,7 @@ class itemType:
         self.special = special
         self.specialValue = specialValue
         self.recipe = recipe
-   
+        """
 
 
 def initMaterials():
@@ -59,7 +59,7 @@ def initMaterials():
                         tempval = row[val]
 
                 # setattr(materialList[len(materialList) - 1], attr, tempval)
-"""
+
 def initItemTypeList():
     global ITEM_HEADERS
 
@@ -115,7 +115,7 @@ def ref(iTID):
 
 def createItem(iTID, **kwargs):
 
-    #todo create weak references to EVERY item
+    #TODO create weak references to EVERY item
 
     if type(iTID) == str:
         for idx, iT in enumerate(itemTypeList):
@@ -151,15 +151,18 @@ def get(i, val):
 
 def createItemAt(itemTypeID, loc, name='0', desc='0'):
     return()
-    #todo creates an item in a specific inventory
+    #TODO creates an item in a specific inventory
 
-def inventory(holder, do, returnTo, sellTo=""):
-    g.clearText()
-    display = "Items in your bag:"  # todo inventory limit
-
+def dispMoney():
     money = pe.me.money
     g.setText(label9=f"You have {str(int((money / 10000)))}  gold, {str(int(money / 100) % 100)} silver, {str(money % 100)} copper.")
 
+def inventory(holder, do, returnTo, sellTo=""):
+    g.clearText()
+    display = "Items in your bag:"  # TODO inventory limit
+
+    dispMoney()
+  
     g.initSelect(display, pe.me, 'inv', 'name', do, returnTo, sellTo=sellTo, doNotClear=[9])
 
 def displayItems(store):
@@ -188,6 +191,7 @@ def buyItem(store, selection):
 def sellItem(store, selection):
     pe.me.money += pe.me.inv[selection - 1].cost
     store.inv.append(pe.me.inv.pop(selection - 1))
+    dispMoney()
 
 def equipItem(iEID):
     equipRegion = items[iEID].equip  # find which region the new item equips to
@@ -205,7 +209,7 @@ def useItem(itemToUse, returnTo):
 
         if itemToUse.special == "poison" and returnTo == "combat":
             c.baddie.status.append(c.statusEffect("Poisoned", 'poison', itemToUse.baseEffectValue, itemToUse.secondaryEffectValue, itemToUse.specialValue, itemToUse.secondaryEffectValue))
-        #todo change this to be more generic. attr for target, then use apply status effect of item special effect
+        #TODO change this to be more generic. attr for target, then use apply status effect of item special effect
 
     elif itemToUse.use == "weapon":
         pe.me.inv.append(pe.me.equippedWeapon)
@@ -223,10 +227,10 @@ def useItem(itemToUse, returnTo):
     elif returnTo == 'combat':
         pe.me.TIBS = 40
         c.tickUntilTurn()
-        #todo check this is right
+        #TODO check this is right
 
 def sortInventory():
-    #todo
+    #TODO
     ...
 
 def loot(baddie, selection):
@@ -256,18 +260,18 @@ def brew(store, brewing):
     for num in range(int(len(store.recipes[brewing].recipe)/2)):
         itemsNeeded.append([store.recipes[brewing].recipe[num], store.recipes[brewing].recipe[num+1]])
         num+=1
-    g.setText(label4= "Give me some things and I can make it.") #todo make this good
+    g.setText(label4= "Give me some things and I can make it.") #TODO make this good
 
-    #todo have brewing cost money too
-    #todo have option to brew yourself, with skill potential for failure
+    #TODO have brewing cost money too
+    #TODO have option to brew yourself, with skill potential for failure
 
     #set button0 first, to craft as through there are enough items. CheckInvForItems will change it if needed
     g.gwin.button0["command"] = lambda:craftItem(store.recipes[brewing])
     checkInvForItems(itemsNeeded)
 
 def craftItem(itemToCraft):
-    #todo have crafting take time
-    #todo have option to half-create an item, tracking how much crafting time is left
+    #TODO have crafting take time
+    #TODO have option to half-create an item, tracking how much crafting time is left
     for num in range(int(len(itemToCraft.recipe) / 2)):
         removeItemsFromInv(itemToCraft.recipe[num],itemToCraft.recipe[num+1])
         num+=1
@@ -286,7 +290,7 @@ def countItem(it, lst):
 
 def condenseList(lst):
     return [[countItem(o, lst), o] for o in lst]
-    #todo turn list into set
+    #TODO turn list into set
 
 def checkInvForItems(itemToSearch, numItems=999):
     itemCount = 0
@@ -295,7 +299,7 @@ def checkInvForItems(itemToSearch, numItems=999):
     if type(itemToSearch) == list:
         #tl = condenseList(itemToSearch)
         for each in itemToSearch:
-            numItems = each[0] #todo make it work for multiple ingrediates
+            numItems = each[0] #TODO make it work for multiple ingrediates
             itemToSearch = itemTypeList[each[1]].itemType
 
             for itm in pe.me.inv:

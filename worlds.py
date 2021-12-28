@@ -78,7 +78,17 @@ class harvest:
         self.item = item
         self.status = 'inactive'
 
-def buildWorld(numCities, infestation):     #todo alternate worlds?
+class clock:
+    def __init__(self,hour,day,month,year) -> None:
+        self.startingDay = day
+        self.startingMonth = month
+        self.startingYear = year
+        self.hour = hour
+        self.day = day
+        self.month = month
+        self.year=year
+
+def buildWorld(numCities, infestation):     #TODO alternate worlds?
     global world
 
     capidx = 0
@@ -118,12 +128,9 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
         else:
             web.nodes[node]['terrain'] = 'grassland'
 
+    #Create Calendar
+    web.clock = clock(8, r.randrange(1, 28), r.randrange(1, 12), r.randrange(100, 200))
 
-
-    web = t.createCalendar(web)
-    # setattr(web,'mine',[])
-    # setattr(web,'lumbermill',[])
-    # setattr(web,'blacksmith', [])
     capidx = 0
 
     #construct and describe roads
@@ -156,7 +163,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
                                          stock(it.ref('Dagger'), 0, 10, True, False, False, True),
                                          stock(it.ref('Club'), 0, 3, True, False, False, True)])
             setattr(tempsite, 'money', r.randrange(1000, 3000))
-            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', True)
             setattr(tempsite, 'location', x)
             web.nodes[x]['sites'].append(tempsite)
@@ -164,7 +171,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             tempsite = pl.createPlace('Armor Shop')
             setattr(tempsite, 'stocks', [stock(it.ref('Plate Mail'), 0, 2, True, False, False, True)])
             setattr(tempsite, 'money', r.randrange(1000, 3000))
-            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', True)
             setattr(tempsite, 'location', x)
             web.nodes[x]['sites'].append(tempsite)
@@ -172,7 +179,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             tempsite = pl.createPlace('Inn')
             setattr(tempsite, 'stocks', [])
             setattr(tempsite, 'money', r.randrange(100, 300))
-            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', False)
             setattr(tempsite, 'location', x)
             web.nodes[x]['sites'].append(tempsite)
@@ -180,13 +187,13 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             tempsite = pl.createPlace('Enchanter')
             setattr(tempsite, 'stocks', [])
             setattr(tempsite, 'money', r.randrange(100, 300))
-            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', False)
             setattr(tempsite, 'location', x)
             web.nodes[x]['sites'].append(tempsite)
 
-        if x in range(1, 5):  # todo dynamically create stocks based on what items the shop could create, based on the items craftMats
-            # todo increase prices at tradeposts
+        if x in range(1, 5):  # TODO dynamically create stocks based on what items the shop could create, based on the items craftMats
+            # TODO increase prices at tradeposts
 
 
             web.nodes[x]['sites'].append(pl.createPlace("Homes"))
@@ -198,7 +205,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
                                          stock(it.ref('Iron Ore'), 0, 20, True, False, False, False),
                                          stock(it.ref('Wood'), 0, 20, True, False, False, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
-            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', True)
             setattr(tempsite, 'location', x)
             web.nodes[x]['sites'].append(tempsite)
@@ -207,18 +214,18 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             setattr(tempsite, 'stocks', [stock(it.ref('Club'), 0, 4, False, True, True, True),
                                          stock(it.ref('Wood'), 0, 20, True, False, False, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
-            setattr(tempsite, 'employees', employRandom(web, x, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, x, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', True)
             setattr(tempsite, 'location', x)
             web.nodes[x]['sites'].append(tempsite)
 
 
-                                #todo food sites generate food supply
+                                #TODO food sites generate food supply
 
         numKrog = r.randrange(infestation + 3, 2 * (infestation + 4))
         web.nodes[x]['monsters'] = pe.createPerson(pTID=1, number=numKrog, location=x)
-        # todo add savagery attr to nodes which affect number and strength of krogs
-        # todo randomize krog growth times
+        # TODO add savagery attr to nodes which affect number and strength of krogs
+        # TODO randomize krog growth times
 
     for x in range(5, 21):
         randnode = (x * 4) + r.randrange(1, 5)  # create mining camp in random node
@@ -227,7 +234,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             tempsite = pl.createPlace('Mining Camp')
             setattr(tempsite, 'stocks', [stock(it.ref('Iron Ore'), 0, 500, False, True, True, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
-            setattr(tempsite, 'employees', employRandom(web, randnode, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, randnode, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', True)
             setattr(tempsite, 'location', x)
             web.nodes[randnode]['sites'].append(tempsite)
@@ -236,7 +243,7 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
             tempsite = pl.createPlace('Lumbermill')
             setattr(tempsite, 'stocks', [stock(it.ref('Wood'), 0, 500, False, True, True, False)])
             setattr(tempsite, 'money', r.randrange(100, 300))
-            setattr(tempsite, 'employees', employRandom(web, randnode, 3))  # todo set num employees based on size
+            setattr(tempsite, 'employees', employRandom(web, randnode, 3))  # TODO set num employees based on size
             setattr(tempsite, 'economic', True)
             setattr(tempsite, 'location', x)
             web.nodes[randnode]['sites'].append(tempsite)
@@ -258,9 +265,9 @@ def buildWorld(numCities, infestation):     #todo alternate worlds?
     web.graph['instability'] = 0
     web.graph['capital'] = capidx
 
-    #kkloc = 3 #todo dont do it this way lol
+    #kkloc = 3 #TODO dont do it this way lol
     #kkloc = r.randrange(r.randrange(len(web.nodes)))
-    #pe.createBoss()  # todo re-add but change to normal person of kingkrog object
+    #pe.createBoss()  # TODO re-add but change to normal person of kingkrog object
     #pe.kingKrog.location = kkloc
 
     return web
@@ -301,7 +308,7 @@ def findClosestSource(web, homeNode, itType):
 def runWorld(hours):
     global world
     global activeJobs
-    TRAVEL_TIME = 4  # todo make based on roads
+    #TRAVEL_TIME = 4  # TODO make based on roads (solved?)
     progBar = '|..................................................|'
     prog = 0
     craftFlag = []
@@ -344,7 +351,7 @@ def runWorld(hours):
                                     # e.busy = True
                                     i.source = findClosestSource(world, shop.location, i.item.itemType)
                                     if i.source:
-                                        distance = 4  # todo make this actual distance between nodes
+                                        distance = 4  # TODO make this actual distance between nodes
                                         tempJob = shoppingTrip(len(activeJobs), None, shop, i.source, distance, allowedCost, shoppingBag(i.item, 0, quantityToBuy), i.item, False)
                                         setWorkerToJob(tempJob)
                                         i.job = tempJob
@@ -380,7 +387,7 @@ def runWorld(hours):
                             if j.job.worker == None:
                                 for e in j.job.homeShop.employees:
                                     if not e.job:
-                                        j.job.worker = e  # todo give workers skills and prioratize workers based on skill
+                                        j.job.worker = e  # TODO give workers skills and prioratize workers based on skill
                                         j.job.status = 'active'
                                         e.job = j
                                         # j.worker.busy = True
@@ -389,7 +396,7 @@ def runWorld(hours):
                                         break
 
                         if j.job.status == 'active':
-                            if type(j.job) == harvest:  # todo have ites go into worker inv then move to store after inv limite reached
+                            if type(j.job) == harvest:  # TODO have ites go into worker inv then move to store after inv limite reached
                                 stidx = findStockIndex(j.job.homeShop, j.job.item)
                                 for i in range(j.job.item.craftQuantity):
                                     tempHarvest = it.createItem(j.job.item.itemType)
@@ -443,7 +450,7 @@ def runWorld(hours):
                                     j.job.item.craftMatsSource = []
                                     j.job.item.crafter = j.job.worker
                                     for each in j.job.craftMatsApplied:
-                                        pass  # todo track soure of materials in item
+                                        pass  # TODO track soure of materials in item
                                     j.job.status = 'complete'
 
 
@@ -508,7 +515,7 @@ def setWorkerToJob(job):
             if not mostTalented:
                 mostTalented = job.homeShop.employees[r.randrange(len(job.homeShop.employees))]
 
-            job.worker = mostTalented  # todo give workers skills and prioratize workers based on skill
+            job.worker = mostTalented  # TODO give workers skills and prioratize workers based on skill
             job.status = 'active'
             mostTalented.job = job
             if type(job) == shoppingTrip:
@@ -563,10 +570,10 @@ def saveWorld():
 
 def loadWorld():
     global world
-    #todo time is not loaded
+    #TODO time is not loaded
     world = nx.read_gpickle(r'world/world.kr')
     #world = nx.read_gml(r'world/world.kr')
-    world = nx.convert_node_labels_to_integers(world)
+    #world = nx.convert_node_labels_to_integers(world)
 
     with open(r"world/items.kr", "rb") as pit:
         it.items = p.load(pit)
@@ -585,7 +592,7 @@ def loadWorld():
 
     b.findBoss()
 
-def openInitialWorld():  # todo I think dead monster inventory loot resets
+def openInitialWorld():  # TODO I think dead monster inventory loot resets
     global world
 
     world = nx.read_gpickle(r'world/worldStart.kr')
@@ -610,8 +617,8 @@ def openInitialWorld():  # todo I think dead monster inventory loot resets
 
     b.findBoss()
 
-    # todo new characters don't keep known info about locs and roads?
-    # todo can find journal of dead characters to learn all stuff they knew
+    # TODO new characters don't keep known info about locs and roads?
+    # TODO can find journal of dead characters to learn all stuff they knew
 
 def saveWorldState():
     if not os.path.exists('world'):

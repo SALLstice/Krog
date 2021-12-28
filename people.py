@@ -125,16 +125,13 @@ def createPlayer(race, loc):
     global me
     # for i in range(len(inv[0])):
     #    inv[0][i]=it.createItem(inv[0][i])
-
+    print("enter name")
     g.setText(label4="Enter your name:")
     g.gwin.button0["text"] = "Confirm"
     g.gwin.button0["command"] = lambda: g.setName(g.gwin.textInput.get())
 
-    skill=skills()
-    mag=magic()
-
     if race == 'human':
-        me = player("", loc, skill, mag)
+        me = player("", loc, skills(), magic())
 
     def setFlags():
         setattr(me, "retreating", False)
@@ -149,11 +146,16 @@ def createPlayer(race, loc):
     def setStats():
         setattr(me, "currentHP", 10)
         setattr(me, "maxHP", 10)
+        setattr(me, "maxHPGain", 0)
         setattr(me, "strength", 2)
+        setattr(me, "strengthGain", 0)
         setattr(me, "tough", 2)
+        setattr(me, "toughGain", 0)
         setattr(me, "overlandSpeed", 3)
+        setattr(me, "overlandSpeedGain", 0)
         setattr(me, "TIBS", 50)
         setattr(me, "speed", 3)
+        setattr(me, "speedGain", 0)
 
     def setMagic():
         pass
@@ -161,6 +163,7 @@ def createPlayer(race, loc):
     def setSkills():
         setattr(me.skills, "Dodge", 10)
         setattr(me.skills, "Club", 50)
+        setattr(me.skills, "Dissection", 10)
 
     def setInventory(ininv):
         inv = []
@@ -184,6 +187,7 @@ def createPlayer(race, loc):
     setInventory([5, 5])
     setEquipment()
     setMagic()
+    
 
 def createPerson(pTID, number=1, name='null', currentHP=-500, location=-1, homeLocation=-1):
     multiAdd = []
@@ -196,7 +200,7 @@ def createPerson(pTID, number=1, name='null', currentHP=-500, location=-1, homeL
         if name == 'null':  #if the person has no name (like a krog), make the name the person type
             setname = personTypeList[pTID].personType
         elif name == 'rand':
-            setname = w.randomName('city')  # todo update to peopel names
+            setname = w.randomName('city')  # TODO update to peopel names
         else:
             setname = name
 
@@ -278,6 +282,45 @@ def loadPlayer():
     with open(r"player.kr", "rb") as play:
         me = p.load(play)
         me.skills = p.load(play)
+
+def statBoostCheck(stat, mod=0):
+    #TODO set maximum on stats
+    #TODO add player announcement for stat increases
+    if (stat == "str"):
+        randnum = r.randint(1,101)
+        if randnum <= me.strengthGain:
+            me.strength += 1
+            me.strenghGain = 0
+        else:
+            me.strengthGain += 1
+    elif (stat == "tough"):
+        randnum = r.randint(1,101)
+        if randnum <= me.toughGain:
+            me.tough += 1
+            me.toughGain = 0
+        else:
+            me.toughGain += 1
+    elif (stat == "speed"):
+        randnum = r.randint(1,201)
+        if randnum <= me.speedGain:
+            me.speed += 1
+            me.speedGain = 0
+        else:
+            me.speedGain += 1
+    elif (stat == "maxHP"):
+        randnum = r.randint(1,51)
+        if randnum <= me.maxHPGain:
+            me.maxHP += 1
+            me.maxHPGain = 0
+        else:
+            me.maxHPGain += 1
+    elif (stat == "overlandSpeed"):
+        randnum = r.randint(1,101)
+        if randnum <= me.overlandSpeedGain:
+            me.overlandSpeed += 1
+            me.overlandSpeedGain = 0
+        else:
+            me.overlandSpeedGain += 1
 
 def skillCheck(skill, mod=0):
 

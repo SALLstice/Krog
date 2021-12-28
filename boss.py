@@ -18,8 +18,8 @@ def createBoss():
     global kingKrog
     kingKrog = pe.createPerson(4, 1, 'King krog')
     setattr(kingKrog, 'attackTarget', None)
-    setattr(kingKrog, 'sleepTimer', 5)
-    setattr(kingKrog, 'location', 83)
+    setattr(kingKrog, 'sleepTimer', 200) #in hours
+    setattr(kingKrog, 'location', 83) #TODO starting location random but far away from player? or fully random
     setattr(kingKrog, 'travelling', False)
     setattr(kingKrog, 'travelRemaining', 0)
     setattr(kingKrog, 'awake', False)
@@ -48,8 +48,8 @@ def attackTown():
     else:
         targ.open = False
         targ.currentHP -= 1
-        print(f'attacks {targ.type}')
-        # todo wear all items in stock
+        print(f'Boss attacks {targ.type}')
+        # TODO wear all items in stock
 
         if targ.currentHP <= 0:
             setattr(targ, 'destroyed', True)
@@ -85,7 +85,7 @@ def bossArrive():
     global kingKrog
     setattr(kingKrog, 'travelling', False)
     kingKrog.location = kingKrog.location[1]
-    print(f'arrives in {kingKrog.location}')
+    print(f'Boss arrives in {kingKrog.location}')
 
 
 def findClosestNotRuin(loc):

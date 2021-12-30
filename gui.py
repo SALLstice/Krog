@@ -24,7 +24,7 @@ class gui(tk.Tk):
 
         self.columnconfigure(1, weight=1)
         self.rowconfigure(0, weight=1)
-        self.geometry("600x370")
+        self.geometry("600x500")
 
         # wwidth = int(self.winfo_width())
         # STATUS_FRAME_SCALE = int(wwidth/5)
@@ -51,6 +51,12 @@ class gui(tk.Tk):
 
         self.TIBSSpdL = tk.Label(self.statusFrame, anchor=tk.W)
         self.TIBSSpdL.pack(side=tk.TOP, fill=tk.X)
+        
+        self.hungerL = tk.Label(self.statusFrame, anchor=tk.W)
+        self.hungerL.pack(side=tk.TOP, fill=tk.X)
+        
+        self.timeAwakeL = tk.Label(self.statusFrame, anchor=tk.W)
+        self.timeAwakeL.pack(side=tk.TOP, fill=tk.X)
 
         self.div = tk.Label(self.statusFrame, text="----------")
         self.div.pack(side=tk.TOP, fill=tk.X)
@@ -155,10 +161,12 @@ class gui(tk.Tk):
 def updateStatus():
     gwin.nameL["text"] = pe.me.name
     gwin.HPL['text'] = f"HP: {pe.me.currentHP}/{pe.me.maxHP}"
-    gwin.strL['text'] = f"Str: {pe.me.strength}"
+    gwin.strL['text'] = f"Str: {pe.me.strength()} (-{int(pe.me.hunger/10)})"
     gwin.touL['text'] = f"Tough: {pe.me.tough}"
     gwin.ovSpdL['text'] = f"Ov Spd: {pe.me.overlandSpeed}"
-    gwin.TIBSSpdL['text'] = f"TIBS Spd: {pe.me.speed}"
+    gwin.TIBSSpdL['text'] = f"TIBS Spd: {pe.me.speed()} (-{int(pe.me.timeAwake/10)})"
+    gwin.hungerL['text'] = f"Hunger: {pe.me.hunger}"
+    gwin.timeAwakeL['text'] = f"Time Awake: {pe.me.timeAwake}"
     gwin.eqWeapL['text'] = f"Wea: {pe.me.equippedWeapon.name}"
     gwin.eqShiL['text'] = f"Shi: {pe.me.equippedShield.itemType}"
     gwin.eqArmL['text'] = f"Arm: {pe.me.equippedArmor.itemType}"

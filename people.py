@@ -47,30 +47,19 @@ class person:
                 setattr(self, skill, skillLevel + 1)
 
         return result
+    
+    def strength(self):
+        effStr = max(0, self.baseStrength - int(self.hunger / 10))
+        return effStr
+
+    def speed(self):
+        effSpeed = max(0, self.baseSpeed - int(self.timeAwake / 10))
+        return effSpeed
 
 class personType:
     def __init__(self, *args, **kwargs):
         for each in PERSON_HEADERS:
             setattr(self, each, args)
-
-    """
-    def __init__(self, personType, inv, strength, maxHP, defense, dodge, speed, event, eventTimer, atkRate, atkStr, atkTIBS, atkMod, atkDesc, addInv):
-        self.personType = personType
-        self.inv = inv
-        self.strength = strength
-        self.maxHP = maxHP
-        self.defense = defense
-        self.dodge = dodge
-        self.speed = speed
-        self.event = event
-        self.eventTimer = eventTimer
-        self.atkRate = atkRate
-        self.atkStr = atkStr
-        self.atkTIBS = atkTIBS
-        self.atkMod = atkMod
-        self.atkDesc = atkDesc
-        self.addInv = addInv
-    """
 
 class dead:
     def __init__(self, entityID, personType, name, inv, deathDate, deathLocation):
@@ -81,14 +70,14 @@ class dead:
         self.deathDate = deathDate
         self.deathLocation = deathLocation
 
-class player:
+class player(person):
     def __init__(self, name, location, skills, magic):
         self.name = name
         self.location = location
         self.skills = skills
         self.magic = magic
         self.timeAwake = 0
-        self.awake = True
+        self.sleeping = False
         self.hunger = 0
 
 
@@ -147,14 +136,14 @@ def createPlayer(race, loc):
         setattr(me, "currentHP", 10)
         setattr(me, "maxHP", 10)
         setattr(me, "maxHPGain", 0)
-        setattr(me, "strength", 2)
+        setattr(me, "baseStrength", 2)
         setattr(me, "strengthGain", 0)
         setattr(me, "tough", 2)
         setattr(me, "toughGain", 0)
         setattr(me, "overlandSpeed", 3)
         setattr(me, "overlandSpeedGain", 0)
         setattr(me, "TIBS", 50)
-        setattr(me, "speed", 3)
+        setattr(me, "baseSpeed", 3)
         setattr(me, "speedGain", 0)
 
     def setMagic():
@@ -289,7 +278,7 @@ def statBoostCheck(stat, mod=0):
     if (stat == "str"):
         randnum = r.randint(1,101)
         if randnum <= me.strengthGain:
-            me.strength += 1
+            me.baseStrength += 1
             me.strenghGain = 0
         else:
             me.strengthGain += 1
@@ -303,7 +292,7 @@ def statBoostCheck(stat, mod=0):
     elif (stat == "speed"):
         randnum = r.randint(1,201)
         if randnum <= me.speedGain:
-            me.speed += 1
+            me.baseSpeed += 1
             me.speedGain = 0
         else:
             me.speedGain += 1

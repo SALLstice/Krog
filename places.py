@@ -1,4 +1,5 @@
 import csv
+from pickle import FALSE
 import random as r
 import time
 
@@ -194,7 +195,7 @@ def setupExploreRT():
     #g.gwin.update()
     g.gwin.button0["command"] = lambda: stopExplore()
 
-    if pe.me.foraging:
+    if pe.me.sneaking:
         g.gwin.button1['text'] = "Stop Sneaking"
     else:
         g.gwin.button1['text'] = "Sneak"
@@ -211,7 +212,20 @@ def setupExploreRT():
     montage = ["", ".", ".  .", ".  .  ."]
     realTimeActivity(timer, 'rmws', montage, 'explore')
 
-def realTimeActivity(timer, encounterCode, montage, activity, dest=-1, journeyLength=-1, progress=0):
+def setupSleepRT(sleepTime):
+    pe.me.sleeping = True
+    g.setText(label4="Sleeping")
+    g.gwin.button0["text"] = "Stop Sleeping"
+    #g.gwin.update()
+    g.gwin.button0["command"] = lambda: stopSleep()
+
+    timer = 0
+    montage = ["", ".", ".  .", ".  .  ."]
+    realTimeActivity(timer, '0', montage, 'sleep', activityLength=sleepTime)
+
+
+def realTimeActivity(timer, encounterCode, montage, activity, dest=-1, activityLength=-1, progress=0):
+    #TODO switch things so RT activities are split first by "keep going until you stop" or "set duration b"
     ENCOUNTER_RATE = 0.25
     encounterType = 0
     encounteredEntity = -1
@@ -234,37 +248,45 @@ def realTimeActivity(timer, encounterCode, montage, activity, dest=-1, journeyLe
         t.timePasses()
         modEncRate = ENCOUNTER_RATE
 
-        if pe.me.sneaking:
-            modEncRate -= int(pe.getSkill('Sneaking') / 5)
+        if activity in ['travel', 'explore']:
+            if pe.me.sneaking:
+                modEncRate -= int(pe.getSkill('Sneaking') / 5)
 
-        if pe.me.foraging:
-            modEncRate =+ FORAGE_ENC_RATE
-            if r.randrange(3) == 0: #easy 33% chance of maybe finding something
-                if pe.skillCheck('Foraging'):
-                    pe.me.inv.append(it.createItem('Healing Herbs'))
-                    g.setText(label8='You find Healing Herbs')
-                    #TODO clear this text
+            if pe.me.foraging:
+                modEncRate =+ FORAGE_ENC_RATE
+                if r.randrange(3) == 0: #easy 33% chance of maybe finding something
+                    if pe.skillCheck('Foraging'):
+                        pe.me.inv.append(it.createItem('Healing Herbs'))
+                        g.setText(label8='You find Healing Herbs')
+                        #TODO clear this text
 
-        encounteredEntity, encounterType = randomEncounter(encounterCode, modEncRate)
-        # TODO increase encounter chance based on number of krog
-        #TODO have button to flag for forage. disp on label6 item found until timer resets label7 skill increase, increase enc rate
-        #TODO add option for sneak and forage during travel
-        if activity == 'travel':
-            progress += pe.me.overlandSpeed * w.world[pe.me.location][dest]['route'].roughness
-            if progress >= journeyLength:
-                pe.me.exploring = 2
+            encounteredEntity, encounterType = randomEncounter(encounterCode, modEncRate)
+            # TODO increase encounter chance based on number of krog
+            #TODO have button to flag for forage. disp on label6 item found until timer resets label7 skill increase, increase enc rate
+            #TODO add option for sneak and forage during travel
+            if activity == 'travel':
+                progress += pe.me.overlandSpeed * w.world[pe.me.location][dest]['route'].roughness
+                if progress >= activityLength:
+                    pe.me.exploring = 2
 
-                w.world[pe.me.location][dest]['route'].known = 1
-                pe.me.location = dest
-                g.clearText()
-                g.setText(label4=f"You walked for {journeyLength} miles and arrive in {w.world.nodes[dest]['name']}.")
-                # TODO make travel work like ExploreRT
-                # TODO time passes
+                    w.world[pe.me.location][dest]['route'].known = 1
+                    pe.me.location = dest
+                    g.clearText()
+                    g.setText(label4=f"You walked for {activityLength} miles and arrive in {w.world.nodes[dest]['name']}.")
+                    # TODO make travel work like ExploreRT
+                    # TODO time passes
 
-                #t.createEvent(t.now(), pe.me.name, 'arrives', dest, dest)  # TODO re-add
+                    #t.createEvent(t.now(), pe.me.name, 'arrives', dest, dest)  # TODO re-add
 
-                g.gwin.button0["text"] = 'Continue'
-                g.gwin.button0['command'] = lambda: arrive()
+                    g.gwin.button0["text"] = 'Continue'
+                    g.gwin.button0['command'] = lambda: arrive()
+            if activity == 'sleep':
+                progress += 1
+
+                pe.me.timeAwake -= pe.me.tough
+
+                if progress >= activityLength:
+                    pe.me.sleeping = False
 
     if encounteredEntity != -1:
         if encounterType == 'm':
@@ -306,10 +328,10 @@ def realTimeActivity(timer, encounterCode, montage, activity, dest=-1, journeyLe
             pass
             #TODO fix and add random events back in. you get stuck after the response everytime
 
-    if pe.me.exploring == 1:
-        realTimeActivity(timer, encounterCode, montage,activity,dest,journeyLength,progress)
+    if pe.me.exploring == 1 or pe.me.sleeping:
+        realTimeActivity(timer, encounterCode, montage,activity,dest,activityLength,progress)
 
-    if pe.me.exploring == 0:
+    if pe.me.exploring == 0 or not pe.me.sleeping:
         g.gwin.button1.grid()
         g.gwin.button2.grid()
         g.gwin.button3.grid()
@@ -317,6 +339,9 @@ def realTimeActivity(timer, encounterCode, montage, activity, dest=-1, journeyLe
 
 def stopExplore():
     pe.me.exploring=0
+
+def stopSleep():
+    pe.me.sleeping = False
 
 def toggleSneak():
     if not pe.me.sneaking:
@@ -443,15 +468,19 @@ def inn(store):
             sleepTime = int(g.gwin.textInput.get())
 
             t.timePasses(sleepTime)
+            #pe.me.timeAwake -= min(sleepTime * 3, pe.me.timeAwake)
 
-            healed = sleepTime * int(pe.me.tough/2)
-            pe.me.currentHP = min(pe.me.maxHP, pe.me.currentHP + healed)
+            setupSleepRT(sleepTime)
+            #TODO make sleeping in bed vs ground more or less refreshing
 
-            g.setText(label4=f"You sleep for {sleepTime} hours.")
-            g.setText(label5=f"You heal {healed}.")
-            g.updateStatus()
+            #healed = sleepTime * int(pe.me.tough/2)
+            #pe.me.currentHP = min(pe.me.maxHP, pe.me.currentHP + healed)
 
-            g.gwin.button0['command'] = lambda:arrive()
+            #g.setText(label4=f"You sleep for {sleepTime} hours.")
+            #g.setText(label5=f"You heal {healed}.")
+            #g.updateStatus()
+
+            #g.gwin.button0['command'] = lambda:arrive()
 
 def witch(store):
     pass

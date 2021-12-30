@@ -39,9 +39,12 @@ def timePasses(timePassed=1, byThe='hour'):  # TODO player gets sleepy and hungr
     for i in range(timePassed):
         w.runWorld(1)
         w.world.clock.hour += 1  # time advances 1 hour at a time
-        #pe.me.timeAwake += 1  #TODO make this do something
-        #pe.me.hunger += 1
-
+        try:
+            if not pe.me.sleeping:
+                pe.me.timeAwake += 1  
+            pe.me.hunger += 1     #TODO make sleeping realtime activity?
+        except:
+            pass
 
         if b.kingKrog.sleepTimer >= 0:
             b.kingKrog.sleepTimer -= 1
@@ -82,6 +85,11 @@ def timePasses(timePassed=1, byThe='hour'):  # TODO player gets sleepy and hungr
             newYear()
 
     w.saveWorld()
+    
+    try:
+        g.updateStatus()
+    except:
+        pass
 
     g.gwin.timeL['text'] = f"Time: {w.world.clock.hour}:00"
     g.gwin.dateL["text"] = f"Date: {w.world.clock.month}/{w.world.clock.day}/{w.world.clock.year}"

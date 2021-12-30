@@ -96,7 +96,7 @@ def tickUntilTurn():
 
         modSpeed = max(1, int(baddie.speed) + tempSpeedMod)
 
-        pe.me.TIBS -= (pe.me.speed + pe.me.equippedWeapon.secondaryEffectValue)
+        pe.me.TIBS -= (pe.me.speed() + pe.me.equippedWeapon.secondaryEffectValue)
 
         if 'stop' not in [o.effect for o in baddie.status]:
             baddie.TIBS -= modSpeed
@@ -284,13 +284,20 @@ def attack():
     #TODO making strong attacks has chance of increasing str.
     #TODO making quick attacks has chance in incresing TIBS Spd
 
+    pe.me.hunger += 2
+    if pe.me.attackType == "S":
+        pe.me.hunger += 1
+
     if r.randrange(100) <= hitChance:
-        damage = r.randrange(int(eqWep.baseEffectValue / 2), eqWep.baseEffectValue) + pe.me.strength
-        if pe.me.attackType == "S":
-            damage += pe.me.strength
+        damage = r.randrange(int(eqWep.baseEffectValue / 2), eqWep.baseEffectValue)
+        
+        if pe.me.attackType == "N":
+            damage += pe.me.strength()
+        elif pe.me.attackType == "S":
+            damage += 2 * pe.me.strength()
             pe.statBoostCheck("str")
-        if pe.me.attackType == "Q":
-            damage -= pe.me.strength
+        elif pe.me.attackType == "Q":
+            #damage -= pe.me.strength()
             pe.statBoostCheck("speed")
         g.setText(label2=f"You deal {damage}")
         damageBaddie(damage)

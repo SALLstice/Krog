@@ -13,9 +13,20 @@ import worlds as w
 
 g.init()
 
-if False: #for debugging world building
+if True and os.path.exists("world/world.kr"): #for world building debugging
+    os.remove('world/history.kr')
+    os.remove('world/historyLog.txt')
+    os.remove('world/items.kr')
+    os.remove('world/itemsStart.kr')
+    os.remove('world/obituary.kr')
+    os.remove('world/persons.kr')
+    os.remove('world/personsStart.kr')
+    os.remove('world/places.kr')
+    os.remove('world/placesStart.kr')
     os.remove('world/world.kr')
-    os.remove('player.kr')
+    os.remove('world/worldStart.kr')
+
+    #os.remove('player.kr')
 
 if os.path.exists("world/world.kr"):
 
@@ -50,7 +61,6 @@ else:
         w.saveWorldState()
         w.saveWorld()
         pe.createPlayer('human', 0)
-        
 
 
 # TODO different race options?

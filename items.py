@@ -168,8 +168,7 @@ def inventory(holder, do, returnTo, sellTo=""):
 def displayItems(store):
     # Display items to buy
     g.clearText()
-    # g.setText(label0=f"--- {store.type} Stock ---")
-    # g.setText(label3=f"  -Item-\t\t\t\t-Strength-\t\t-Cost-")
+    
     display = f"--- {store.type} Stock ---"
     g.initSelect(display, store, 'inv', ['name', 'cost'], 'buy', 'krog')
 
